@@ -161,10 +161,10 @@ div.menu,
 #main,
 #wrapper {
 	margin: 0 auto;
-	width: 940px;
+	width: 970px;
 }
 #wrapper {
-	background: #fff;
+	background: #054B81;
 	margin-top: 20px;
 	padding: 0 20px;
 }
@@ -198,7 +198,7 @@ div.menu,
 
 /* Main global 'theme' and typographic styles */
 body {
-	background: #f1f1f1;
+	background: #003469;
 }
 body,
 input,
@@ -370,7 +370,7 @@ a:hover {
 	display: block;
 	float: left;
 	margin: 0 auto;
-	width: 940px;
+	width: 970px;
 }
 #access .menu-header,
 div.menu {
@@ -448,6 +448,7 @@ div.menu li {
 -------------------------------------------------------------- */
 
 #main {
+  background: #fff;
 	clear: both;
 	overflow: hidden;
 	padding: 40px 0 0 0;
@@ -1190,7 +1191,7 @@ h3#reply-title {
 	font-weight: bold;
 }
 #site-info a {
-	color: #000;
+	color: #999;
 	text-decoration: none;
 }
 #site-generator {
@@ -1199,7 +1200,7 @@ h3#reply-title {
 }
 #site-generator a {
 	background: url(images/wordpress.png) center left no-repeat;
-	color: #666;
+	color: #999;
 	display: inline-block;
 	line-height: 16px;
 	padding-left: 20px;
