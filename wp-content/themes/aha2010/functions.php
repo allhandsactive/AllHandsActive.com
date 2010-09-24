@@ -103,12 +103,12 @@ function aha2010_setup() {
 	// Your changeable header business starts here
 	define( 'HEADER_TEXTCOLOR', '' );
 	// No CSS, just IMG call. The %s is a placeholder for the theme template directory URI.
-	define( 'HEADER_IMAGE', '%s/images/headers/path.jpg' );
+	define( 'HEADER_IMAGE', '%s/images/headers/aha-black.png' );
 
 	// The height and width of your custom header. You can hook into the theme's own filters to change these values.
 	// Add a filter to aha2010_header_image_width and aha2010_header_image_height to change these values.
-	define( 'HEADER_IMAGE_WIDTH', apply_filters( 'aha2010_header_image_width', 940 ) );
-	define( 'HEADER_IMAGE_HEIGHT', apply_filters( 'aha2010_header_image_height', 198 ) );
+	define( 'HEADER_IMAGE_WIDTH', apply_filters( 'aha2010_header_image_width', 970 ) );
+	define( 'HEADER_IMAGE_HEIGHT', apply_filters( 'aha2010_header_image_height', 180 ) );
 
 	// We'll be using post thumbnails for custom header images on posts and pages.
 	// We want them to be 940 pixels wide by 198 pixels tall.
