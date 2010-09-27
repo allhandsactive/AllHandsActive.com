@@ -1,0 +1,74 @@
+/* inline-block browser solution courtesy of http://www.webmasterworld.com/css/3649638.htm */
+
+/* Images inserted by Picasa Image Express */
+.pie-image{
+}
+
+/* Wrapper around a series of images */
+.pie-gallery{
+	margin-top:0.5em;
+	margin-bottom:0.5em;
+}
+
+/* Wrapper around an image and a caption */
+.pie-gallery HR{
+	margin:0;
+	padding:0;
+	display:block;
+	clear:both;
+	visibility:hidden;
+}
+
+/* Wrapper around an image and a caption */
+.pie-item{
+	display: -moz-inline-box; /* For FF<3 */ 
+	-moz-box-orient: vertical; /* For FF<3 */ 
+	display:inline-block; /*IE <8 needs this tripped back to display: inline; to make it work on block elements  */
+	vertical-align: top; /* explicitly declare your preference as Moz inline-box auto aligns to top */
+}
+
+/* <P> containing an image or thumbnail */
+.pie-img-wrapper{
+	padding:0;
+	margin:0;
+}
+
+/* <P> containing a caption */
+.pie-caption{
+	font-size:11px;
+	font-family:verdana,arial,helvetica,san-serif;
+	line-height:15px;
+	color:#666;
+	text-align:left !important;
+	padding: 0;
+	margin-top:10px;
+}
+
+/* Alignment options for single images */
+.pie-img.alignleft,
+.pie-item.alignleft{
+	float:left;
+}
+
+.pie-img.alignright,
+.pie-item.alignright{
+	float:right;
+}
+
+/* Alignment options for galleries */
+.pie-gallery.alignGalleryLeft{
+	text-align:left;
+}
+
+.pie-gallery.alignGalleryRight{
+	text-align:right;
+}
+
+.pie-gallery.alignGalleryCenter{
+	text-align:center;
+}
+
+.pie-gallery.alignGalleryCenter .pie-caption{
+	text-align:center;
+	margin:0 auto;
+}
