@@ -42,7 +42,7 @@ if ( ! function_exists( 'aha2010_setup' ) ):
  * @uses register_default_headers() To register the default custom header images provided with the theme.
  * @uses set_post_thumbnail_size() To set a custom post thumbnail size.
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  */
 function aha2010_setup() {
 
@@ -156,7 +156,7 @@ if ( ! function_exists( 'aha2010_admin_header_style' ) ) :
  *
  * Referenced via add_custom_image_header() in aha2010_setup().
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  */
 function aha2010_admin_header_style() {
 ?>
@@ -181,7 +181,7 @@ endif;
  * To override this in a child theme, remove the filter and optionally add
  * your own function tied to the wp_page_menu_args filter hook.
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  */
 function aha2010_page_menu_args( $args ) {
 	$args['show_home'] = true;
@@ -195,7 +195,7 @@ add_filter( 'wp_page_menu_args', 'aha2010_page_menu_args' );
  * To override this length in a child theme, remove the filter and add your own
  * function tied to the excerpt_length filter hook.
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  * @return int
  */
 function aha2010_excerpt_length( $length ) {
@@ -206,7 +206,7 @@ add_filter( 'excerpt_length', 'aha2010_excerpt_length' );
 /**
  * Returns a "Continue Reading" link for excerpts
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  * @return string "Continue Reading" link
  */
 function aha2010_continue_reading_link() {
@@ -219,7 +219,7 @@ function aha2010_continue_reading_link() {
  * To override this in a child theme, remove the filter and add your own
  * function tied to the excerpt_more filter hook.
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  * @return string An ellipsis
  */
 function aha2010_auto_excerpt_more( $more ) {
@@ -233,7 +233,7 @@ add_filter( 'excerpt_more', 'aha2010_auto_excerpt_more' );
  * To override this link in a child theme, remove the filter and add your own
  * function tied to the get_the_excerpt filter hook.
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  * @return string Excerpt with a pretty "Continue Reading" link
  */
 function aha2010_custom_excerpt_more( $output ) {
@@ -247,9 +247,9 @@ add_filter( 'get_the_excerpt', 'aha2010_custom_excerpt_more' );
 /**
  * Remove inline styles printed when the gallery shortcode is used.
  *
- * Galleries are styled by the theme in Twenty Ten's style.css.
+ * Galleries are styled by the theme in AHA 2010's style.css.
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  * @return string The gallery style filter, with the styles themselves removed.
  */
 function aha2010_remove_gallery_css( $css ) {
@@ -266,7 +266,7 @@ if ( ! function_exists( 'aha2010_comment' ) ) :
  *
  * Used as a callback by wp_list_comments() for displaying the comments.
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  */
 function aha2010_comment( $comment, $args, $depth ) {
 	$GLOBALS['comment'] = $comment;
@@ -317,7 +317,7 @@ endif;
  * To override aha2010_widgets_init() in a child theme, remove the action hook and add your own
  * function tied to the init hook.
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  * @uses register_sidebar
  */
 function aha2010_widgets_init() {
@@ -396,7 +396,7 @@ add_action( 'widgets_init', 'aha2010_widgets_init' );
  * To override this in a child theme, remove the filter and optionally add your own
  * function tied to the widgets_init action hook.
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  */
 function aha2010_remove_recent_comments_style() {
 	global $wp_widget_factory;
@@ -408,7 +408,7 @@ if ( ! function_exists( 'aha2010_posted_on' ) ) :
 /**
  * Prints HTML with meta information for the current post—date/time and author.
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  */
 function aha2010_posted_on() {
 	printf( __( '<span class="%1$s">Posted on</span> %2$s <span class="meta-sep">by</span> %3$s', 'aha2010' ),
@@ -431,7 +431,7 @@ if ( ! function_exists( 'aha2010_posted_in' ) ) :
 /**
  * Prints HTML with meta information for the current post (category, tags and permalink).
  *
- * @since Twenty Ten 1.0
+ * @since AHA 2010 1.0
  */
 function aha2010_posted_in() {
 	// Retrieves tag list of current post, separated by commas.

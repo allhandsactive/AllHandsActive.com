@@ -14,8 +14,8 @@
  * <code>get_template_part( 'loop', 'index' );</code>
  *
  * @package WordPress
- * @subpackage Twenty_Ten
- * @since Twenty Ten 1.0
+ * @subpackage Aha_2010
+ * @since AHA 2010 1.0
  */
 ?>
 
@@ -41,7 +41,7 @@
 <?php
 	/* Start the Loop.
 	 *
-	 * In Twenty Ten we use the same loop in multiple contexts.
+	 * In AHA 2010 we use the same loop in multiple contexts.
 	 * It is broken into three main parts: when we're displaying
 	 * posts that are in the gallery category, when we're displaying
 	 * posts in the asides category, and finally all other posts.

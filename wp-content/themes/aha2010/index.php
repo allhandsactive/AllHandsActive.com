@@ -9,8 +9,8 @@
  * Learn more: http://codex.wordpress.org/Template_Hierarchy
  *
  * @package WordPress
- * @subpackage Twenty_Ten
- * @since Twenty Ten 1.0
+ * @subpackage Aha_2010
+ * @since AHA 2010 1.0
  */
 
 get_header(); ?>

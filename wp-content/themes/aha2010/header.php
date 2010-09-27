@@ -5,8 +5,8 @@
  * Displays all of the <head> section and everything up till <div id="main">
  *
  * @package WordPress
- * @subpackage Twenty_Ten
- * @since Twenty Ten 1.0
+ * @subpackage Aha_2010
+ * @since AHA 2010 1.0
  */
 ?><!DOCTYPE html>
 <html <?php language_attributes(); ?>>
