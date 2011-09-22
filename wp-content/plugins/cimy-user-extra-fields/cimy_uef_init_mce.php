@@ -78,9 +78,12 @@ if (!empty($cimy_uef_register_page)) {
 		'content_css' => $mce_css,
 		'language' => $mce_locale,
 		'spellchecker_languages' => $mce_spellchecker_languages,
-		'theme_advanced_resizin' => "true",
-		'theme_advanced_resize_horizontal' => "false",
+		'theme_advanced_resizin' => true,
+		'theme_advanced_resize_horizontal' => false,
 		'dialog_type' => "modal",
+		'relative_urls' => false,
+		'convert_urls' => false,
+		'remove_script_host' => false,
 		'plugins' => implode( ',', $plugins ),
 	);
 

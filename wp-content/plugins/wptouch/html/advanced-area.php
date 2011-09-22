@@ -16,6 +16,14 @@
 	<div class="right-content">
 		<ul>
 			<li>
+				<input class="checkbox" type="checkbox" name="enable-zoom" <?php if ( isset( $wptouch_settings['enable-zoom']) && $wptouch_settings['enable-zoom'] == 1) echo('checked'); ?> />
+				<label class="label" for="enable-zoom"><?php _e( "Allow zooming on content", "wptouch" ); ?> <a href="#zoom-info" class="fancylink">?</a></label>
+				<div id="zoom-info" style="display:none">
+					<h2><?php _e( "More Info", "wptouch" ); ?></h2>
+					<p><?php _e( "This will allow users to zoom in and out on content.", "wptouch" ); ?></p>
+				</div>
+			</li>
+			<li>
 				<input class="checkbox" type="checkbox" name="enable-cats-button" <?php if ( isset( $wptouch_settings['enable-cats-button']) && $wptouch_settings['enable-cats-button'] == 1) echo('checked'); ?> />
 				<label class="label" for="enable-cats-button"><?php _e( "Enable Categories tab in the header", "wptouch" ); ?> <a href="#cats-info" class="fancylink">?</a></label>
 				<div id="cats-info" style="display:none">
@@ -70,14 +78,17 @@
 					</div><br /><br />
 			</li>	
 			<li>
-				<input class="checkbox" type="checkbox" name="enable-gravatars" <?php if (isset($wptouch_settings['enable-gravatars']) && $wptouch_settings['enable-gravatars'] == 1) echo('checked'); ?> />
-				<label class="label" for="enable-gravatars"> <?php _e( "Enable gravatars in comments", "wptouch" ); ?></label>
-			</li>
-			
+			<input class="checkbox" type="checkbox" name="enable-show-comments" <?php if (isset($wptouch_settings['enable-show-comments']) && $wptouch_settings['enable-show-comments'] == 1) echo('checked'); ?> />
+			<label class="label" for="enable-show-comments"> <?php _e( "Enable comments on posts", "wptouch" ); ?> <a href="#page-coms-info" class="fancylink">?</a></label>
+				<div id="page-coms-info" style="display:none">
+					<h2><?php _e( "More Info", "wptouch" ); ?></h2>
+					<p><?php _e( "If unchecked, this will hide all commenting features on posts and blog listings.", "wptouch" ); ?></p>
+				</div>
+			</li>			
 			<?php //If we actually have pages, show this option 
 			if ( count( $pages ) ) { ?>
 			<li>
-			<input class="checkbox" type="checkbox" name="enable-page-coms" <?php if (isset($wptouch_settings['enable-page-coms']) && $wptouch_settings['enable-page-coms'] == 1) echo('checked'); ?> />
+			<input class="checkbox" type="checkbox" name="enable-page-coms" <?php if ( isset($wptouch_settings['enable-page-coms']) && $wptouch_settings['enable-page-coms'] == 1 ) echo('checked'); ?> />
 			<label class="label" for="enable-page-coms"> <?php _e( "Enable comments on pages", "wptouch" ); ?> <a href="#page-coms-info" class="fancylink">?</a></label>
 				<div id="page-coms-info" style="display:none">
 					<h2><?php _e( "More Info", "wptouch" ); ?></h2>
@@ -85,7 +96,12 @@
 				</div>
 			</li>
 			<?php } ?>
-			<li><br />
+			<li>
+				<input class="checkbox" type="checkbox" <?php if ( isset($wptouch_settings['enable-show-comments']) && $wptouch_settings['enable-show-comments'] == 0 ) echo ('disabled="true"');?> name="enable-gravatars" <?php if (isset($wptouch_settings['enable-gravatars']) && $wptouch_settings['enable-gravatars'] == 1) echo('checked'); ?> />
+				<label class="label" for="enable-gravatars"> <?php _e( "Enable gravatars in comments", "wptouch" ); ?></label>
+			</li>
+			<li>			
+			<br />
 				<input class="checkbox" type="checkbox" name="enable-regular-default" <?php if (isset($wptouch_settings['enable-regular-default']) && $wptouch_settings['enable-regular-default'] == 1) echo('checked'); ?> />
 				<label class="label" for="enable-regular-default"><?php echo sprintf(__( "1%sst%s visit mobile users will see desktop theme", "wptouch" ), '<sup>','</sup>'); ?> <a href="#reg-info" class="fancylink">?</a></label>
 				<div id="reg-info" style="display:none">
@@ -99,7 +115,7 @@
 				<label class="label" for="enable-exclusive"> <?php _e( "Enable WPtouch Restricted Mode", "wptouch" ); ?> <a href="#restricted-info" class="fancylink">?</a></label>
 					<div id="restricted-info" style="display:none">
 						<h2><?php _e( "More Info", "wptouch" ); ?></h2>
-						<p><?php _e( "Disallow other plugins from loading into scripts into WPtouch's header and footer.", "wptouch" ); ?></p> 
+						<p><?php _e( "Disallow other plugins from loading scripts into WPtouch's header and footer.", "wptouch" ); ?></p> 
 						<p><?php _e( "Sometimes fixes incompatibilities and speeds up WPtouch.", "wptouch" ); ?></p>
 						<p><?php _e( "Some plugins load conflicting javascript, extra CSS style sheets, and other functional code into your theme to accomplish what they add to your site. As WPtouch works complete on its own without any other plugin installed, in some cases (where you have several plugins or find something doesn't work right with WPtouch) you may want to enable Restricted Mode to ensure that WPtouch works properly, and loads quickly for mobile users.", "wptouch" ); ?></p>
 					</div>

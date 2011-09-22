@@ -3,11 +3,15 @@
 /**
  * W3 Total Cache advanced cache module
  */
+if (!defined('ABSPATH')) {
+    die();
+}
+
 if (!defined('W3TC_IN_MINIFY')) {
     if (!defined('W3TC_DIR')) {
         define('W3TC_DIR', WP_CONTENT_DIR . '/plugins/w3-total-cache');
     }
-    
+
     if (!@is_dir(W3TC_DIR) || !file_exists(W3TC_DIR . '/inc/define.php')) {
         if (defined('WP_ADMIN')) { // lets don't show error on front end
             @header('HTTP/1.1 503 Service Unavailable');
@@ -15,9 +19,14 @@ if (!defined('W3TC_IN_MINIFY')) {
         }
     } else {
         require_once W3TC_DIR . '/inc/define.php';
-        require_once W3TC_DIR . '/lib/W3/PgCache.php';
-        
-        $w3_pgcache = & W3_PgCache::instance();
-        $w3_pgcache->process();
+
+        $redirect = & w3_instance('W3_Redirect');
+        $redirect->process();
+
+        $config = & w3_instance('W3_Config');
+        if ($config->get_boolean('pgcache.enabled')) {
+            $w3_pgcache = & w3_instance('W3_PgCache');
+            $w3_pgcache->process();
+        }
     }
 }

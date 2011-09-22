@@ -2,6 +2,16 @@
 
 if ( isset( $_POST['submit'] ) ) {
 	// let's rock and roll
+	$nonce = $_POST['wptouch-nonce'];
+	if ( !wp_verify_nonce( $nonce, 'wptouch-nonce' ) ) {
+		_e( "Nonce Failure", "wptouch" );
+		die;
+	}
+
+	if ( !current_user_can( 'manage_options' ) ) {
+		_e( "Security failure.  Please log in again.", "wptouch" ); 
+		die;
+	}
 	
 	unset( $_POST['submit'] );
 	$a = array();
@@ -11,11 +21,23 @@ if ( isset( $_POST['submit'] ) ) {
 	} else {
 		$a['enable-post-excerpts'] = 0;
 	}
+	
+	if ( isset( $_POST['enable-twenty-eleven-footer'] ) ) {
+		$a['enable-twenty-eleven-footer'] = 1;
+	} else {
+		$a['enable-twenty-eleven-footer'] = 0;
+	}
 
 	if ( isset( $_POST['enable-page-coms'] ) ) {
 		$a['enable-page-coms'] = 1;
 	} else {
 		$a['enable-page-coms'] = 0;
+	}
+
+	if ( isset( $_POST['enable-zoom'] ) ) {
+		$a['enable-zoom'] = 1;
+	} else {
+		$a['enable-zoom'] = 0;
 	}
 
 	if ( isset( $_POST['enable-cats-button'] ) ) {
@@ -149,6 +171,12 @@ if ( isset( $_POST['submit'] ) ) {
 		$a['enable-regular-default'] = 0;
 	}
 	
+	if ( isset($_POST['enable-show-comments']) ) {
+		$a['enable-show-comments'] = 1;
+	} else {
+		$a['enable-show-comments'] = 0;
+	}		
+	
 	if ( isset($_POST['enable-show-tweets']) ) {
 		$a['enable-show-tweets'] = 1;
 	} else {
@@ -173,7 +201,11 @@ if ( isset( $_POST['submit'] ) ) {
 	if ( isset($_POST['excluded-cat-ids']) ) {
 		$a['excluded-cat-ids'] = $_POST['excluded-cat-ids'];
 	}
-	
+
+	if ( isset($_POST['excluded-tag-ids']) ) {
+		$a['excluded-tag-ids'] = $_POST['excluded-tag-ids'];
+	}
+		
 	if ( isset($_POST['adsense-id']) ) {
 		$a['adsense-id'] = trim( $_POST['adsense-id'] );
 	}
@@ -247,11 +279,10 @@ if ( isset( $_POST['submit'] ) ) {
 	$values = serialize($a);
 	update_option('bnc_iphone_pages', $values);
 } elseif ( isset( $_POST['reset'] ) ) {
-	update_option( 'bnc_iphone_pages', '' );
+	update_option( 'bnc_iphone_pages', false );
 }
  	
 do_action( 'wptouch_load_locale' );
 
 global $wptouch_settings;
 $wptouch_settings = bnc_wptouch_get_settings();
-?>

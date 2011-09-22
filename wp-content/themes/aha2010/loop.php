@@ -27,17 +27,7 @@
 	</div><!-- #nav-above -->
 <?php endif; ?>
 
-<?php /* If there are no posts to display, such as an empty archive page */ ?>
-<?php if ( ! have_posts() ) : ?>
-	<div id="post-0" class="post error404 not-found">
-		<h1 class="entry-title"><?php _e( 'Not Found', 'aha2010' ); ?></h1>
-		<div class="entry-content">
-			<p><?php _e( 'Apologies, but no results were found for the requested archive. Perhaps searching will help find a related post.', 'aha2010' ); ?></p>
-			<?php get_search_form(); ?>
-		</div><!-- .entry-content -->
-	</div><!-- #post-0 -->
-<?php endif; ?>
-
+<?php $havePosts = have_posts(); /* Keep track of whether we have posts for use later.*/ ?>
 <?php
 	/* Start the Loop.
 	 *
@@ -167,8 +157,53 @@
 
 <?php endwhile; // End the loop. Whew. ?>
 
-<?php /* Display navigation to next/previous pages when applicable */ ?>
-<?php if (  $wp_query->max_num_pages > 1 ) : ?>
+<?php /* If there are no posts to display, such as an empty archive page.  Only do this in non-author cases. */ ?>
+<?php if(!$havePosts && !is_author()) : ?>
+	<div id="post-0" class="post error404 not-found">
+		<h1 class="entry-title"><?php _e( 'Not Found', 'aha2010' ); ?></h1>
+		<div class="entry-content">
+			<p><?php _e( 'Apologies, but no results were found for the requested archive. Perhaps searching will help find a related post.', 'aha2010' ); ?></p>
+			<?php get_search_form(); ?>
+		</div><!-- .entry-content -->
+	</div><!-- #post-0 -->
+<?php endif; ?>
+
+<?php
+if(is_author()):
+  $thisAuthor = get_userdata($author);
+  
+  //Get recent comments for this author.
+  $qry = "SELECT comment_ID, comment_post_ID, post_title
+          FROM $wpdb->comments, $wpdb->posts
+          WHERE user_id = $thisAuthor->ID
+            AND comment_post_id = ID
+            AND comment_approved = 1
+          ORDER BY comment_ID DESC
+          LIMIT 15";
+
+   $commentArr = $wpdb->get_results($qry, OBJECT);
+
+  if($commentArr):
+?>
+<h2><?php _e('Recent Comments:', 'aha2010'); ?></h2>
+<ul>
+<?php foreach ($commentArr as $comment):
+	setup_postdata($comment);
+	echo "<li><a href='". get_comment_link($comment->comment_ID) ."'>" . $comment->post_title ."</a></li>";
+endforeach; ?>
+</ul>
+<?php
+    else:
+?>
+<h2><?php _e('This user has not commented on anything yet.'); ?></h2>
+<?php
+    endif;
+  endif;
+?>
+
+<?php
+  /* Display navigation to next/previous pages when applicable */
+  if (  $wp_query->max_num_pages > 1 ) : ?>
 				<div id="nav-below" class="navigation">
 					<div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older posts', 'aha2010' ) ); ?></div>
 					<div class="nav-next"><?php previous_posts_link( __( 'Newer posts <span class="meta-nav">&rarr;</span>', 'aha2010' ) ); ?></div>

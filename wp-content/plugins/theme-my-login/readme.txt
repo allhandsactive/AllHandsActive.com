@@ -2,9 +2,9 @@
 Contributors: jfarthing84
 Donate link: http://www.jfarthing.com/donate
 Tags: widget, login, registration, theme, custom, log in, register, sidebar, gravatar, redirection, e-mail
-Requires at least: 2.8
-Tested up to: 3.0
-Stable tag: 5.1.6
+Requires at least: 3.0
+Tested up to: 3.1
+Stable tag: 6.1.4
 
 Themes the WordPress login pages according to your theme.
 
@@ -13,8 +13,6 @@ Themes the WordPress login pages according to your theme.
 
 This plugin themes the WordPress login, registration and forgot password pages according to your current theme. It replaces the wp-login.php file by using a page template from your theme. Also includes a widget for sidebar login.
 
-= NOTICE =
-Upgrading to version 5.0 will drop all previous options!
 
 = Features =
 * Your registration, log in, and password recovery pages will all match the rest of your website
@@ -33,15 +31,83 @@ Upgrading to version 5.0 will drop all previous options!
 
 1. Upload the plugin to your 'wp-content/plugins' directory
 1. Activate the plugin
-1. Visit the [Theme My Login Official Usage Thread](http://www.jfarthing.com/forum/theme-my-login/theme-my-login-official-usage-thread/) for further instruction.
 
 
 == Frequently Asked Questions ==
 
-None yet. Please visit http://www.jfarthing.com/forum for any support!
+Please visit http://www.jfarthing.com/docs/Theme_My_Login first and then visit http://www.jfarthing.com/support if you have any questions, concerns, suggestions or problems.
 
 
 == Changelog ==
+
+= 6.1.4 =
+* Don't hijack non-related form posts
+
+= 6.1.3 =
+* Fix password change error
+* Update POT file
+
+= 6.1.2 =
+* Replace "self" keyword with "$this" for PHP 4
+
+= 6.1.1 =
+* Implement 3.1 password reset routine
+* Add 3.1 fields to Themed Profiles
+* Better default stylesheet for Themed Profiles
+* Add 'nofollow' attribute to action links
+* Check for SSL
+* Add nofollow and noindex to login page
+* Fix missing argument notices
+* Fix deprecated argument notices
+* Fix undefined method notices
+* Fix install/uninstall routines
+* Fix Custom user Links AJAX
+* Fix Custom E-mail "From" filters
+* Fix disabling of admin password change notification
+* Fix "resent" custom activation e-mail
+
+= 6.1 =
+* Fully support multisite
+* Require WordPress 3.0+
+* Add Bulgarian translation
+* Add (Belgian) Dutch translation
+* Add Romanian translation
+
+= 6.0.4 =
+* Fix admin e-mail notification disabling
+* Fix labels for login form fields
+* Fix wp-login.php form action URL
+
+= 6.0.3 =
+* Fix login reauth bug in redirection module
+
+= 6.0.2 =
+* Fix Login page creation during install
+* Fix template tag argument parsing
+
+= 6.0.1 =
+* Fix logout link for wp_nav_menu()
+* Fix issue admin page not always being tabbed
+* Fix issue of assigning multiple roles per user when using Moderation
+* Add German translation
+* Add Farsi (Persian) translation
+* Add Hebrew translation
+* Add Russian translation
+* Update other languages
+
+= 6.0 =
+* Complete code rewrite
+* Users can now log in with e-mail address as well as username
+* Remove option to disable template tag and widget in favor of always being enabled
+* Remove option to rewrite login links in favor of always being rewritten
+* Custom templates can now be defined per action (login, register, etc.)
+* User moderation activation e-mails can be resent on demand
+* Add various new hooks to help with custom integration with other plugins
+* Make custom user links sortable
+* Customize every aspect of every e-mail
+* Add a cool new random tip widget in the TML admin
+* Use WP 3.0 functions (such as 'network_site_url') if available
+* phpDoc everywhere!
 
 = 5.1.6 =
 * Fix issue with spaces in usernames
@@ -170,6 +236,7 @@ None yet. Please visit http://www.jfarthing.com/forum for any support!
 * Implemented custom links for logged in users based on role
 * Implemented custom redirection upon log in based on role
 * Implemented custom registration/password recovery emails
+
 * Implemented true shortcode and template tag functionality
 * Implemented true multi-instance functionality
 * Implemented an easy-to-use jQuery tabbed administration menu

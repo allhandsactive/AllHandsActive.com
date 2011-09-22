@@ -8,7 +8,7 @@
 			        <div class="single-post-meta-top"><?php echo get_the_time('M jS, Y @ h:i a') ?> &rsaquo; <?php the_author() ?><br />
 
 		<!-- Let's check for DISQUS... we need to skip to a different div if it's installed and active -->		
-		<?php if ('open' == $post->comment_status) : ?>
+		<?php if ( 'open' == $post->comment_status && bnc_can_show_comments() ) : ?>
 			<?php if (function_exists('dsq_comments_template')) { ?>
 		 		<a href="#dsq-add-new-comment">&darr; <?php _e( "Skip to comments", "wptouch" ); ?></a>
 			<?php } elseif (function_exists('id_comments_template')) { ?>
@@ -44,8 +44,9 @@
 		<?php } ?>
 		<li><a href="mailto:?subject=<?php
 bloginfo('name'); ?>- <?php the_title_attribute();?>&body=<?php _e( "Check out this post:", "wptouch" ); ?>%20<?php the_permalink() ?>" onclick="return confirm('<?php _e( "Mail a link to this post?", "wptouch" ); ?>');" id="omail"></a></li>
-		<?php wptouch_twitter_link(); // This detects if it's an Apple mobile device or not and serves up the right Twitter link ?>
-		<li><a href="javascript:return false;" onclick="wptouch_toggle_bookmarks();" id="obook"></a></li>
+		<?php wptouch_twitter_link(); ?>
+		<?php wptouch_facebook_link(); ?>
+		<li><a href="javascript:return false;" id="obook"></a></li>
 		<?php $nextPost = get_next_post(); if ($nextPost) { ?>
 			<li><a href="<?php $nextPost = get_next_post(false); $nextURL = get_permalink($nextPost->ID); echo $nextURL; ?>" id="onext"></a></li>
 		<?php } ?>
@@ -66,26 +67,27 @@ bloginfo('name'); ?>- <?php the_title_attribute();?>&body=<?php _e( "Check out t
 	</div>
 
 <!-- Let's rock the comments -->
-
+<?php if ( bnc_can_show_comments() ) : ?>
 	<?php comments_template(); ?>
 <script type="text/javascript">
 jQuery(document).ready( function() {
 // Ajaxify '#commentform'
 var formoptions = { 
-	beforeSubmit: function() {$wptouch("#loading").fadeIn(400);},
+	beforeSubmit: function() {$wpt("#loading").fadeIn(400);},
 	success:  function() {
-		$wptouch("#commentform").hide();
-		$wptouch("#loading").fadeOut(400);
-		$wptouch("#refresher").fadeIn(400);
+		$wpt("#commentform").hide();
+		$wpt("#loading").fadeOut(400);
+		$wpt("#refresher").fadeIn(400);
 		}, // end success 
 	error:  function() {
-		$wptouch('#errors').show();
-		$wptouch("#loading").fadeOut(400);
+		$wpt('#errors').show();
+		$wpt("#loading").fadeOut(400);
 		} //end error
 	} 	//end options
-$wptouch('#commentform').ajaxForm(formoptions);
+$wpt('#commentform').ajaxForm(formoptions);
 }); //End onReady
 </script>
+<?php endif; ?>
 	<?php endwhile; else : ?>
 
 <!-- Dynamic test for what page this is. A little redundant, but so what? -->
@@ -99,4 +101,5 @@ $wptouch('#commentform').ajaxForm(formoptions);
 	
 	<!-- Do the footer things -->
 	
-<?php global $is_ajax; if (!$is_ajax) get_footer(); ?>
+<?php global $is_ajax; if (!$is_ajax) 
+get_footer();

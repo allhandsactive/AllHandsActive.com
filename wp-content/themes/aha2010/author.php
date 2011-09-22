@@ -20,38 +20,30 @@ get_header(); ?>
 	 * We reset this later so we can run the loop
 	 * properly with a call to rewind_posts().
 	 */
-	if ( have_posts() )
-		the_post();
+
+//Do we divert to author's profile view?
+
+/*
+******* NOTE!: I'm not entirely sure if $author comes in as clean input, so we will go ahead and clean it here.
+This *could* break things later on if they expect it to not have changed at all, but we're probably safe.
+*/
+$author = intval($author);
+
+$isPrivate = get_cimyFieldValue($author, 'PRIVATE_PROFILE', 'YES');
+if(isset($_GET['profileview']) && !$isPrivate):
+  get_template_part('author', 'profileview');
+else:
+  $authorData = get_userdata($author);
 ?>
-
-				<h1 class="page-title author"><?php printf( __( 'Author Archives: %s', 'aha2010' ), "<span class='vcard'><a class='url fn n' href='" . get_author_posts_url( get_the_author_meta( 'ID' ) ) . "' title='" . esc_attr( get_the_author() ) . "' rel='me'>" . get_the_author() . "</a></span>" ); ?></h1>
-
+<?php echo get_avatar($authorData->user_email, apply_filters('aha2010_author_bio_avatar_size', 60)); ?>
+<h1 class="page-title author"><?php printf( __( 'History for %s', 'aha2010' ), "<span class='vcard'><a class='url fn n' href='" . get_author_posts_url($authorData->ID) . "' title='" . esc_attr($authorData->display_name) . "' rel='me'>" . $authorData->display_name . "</a></span>" ); ?></h1>
 <?php
-// If a user has filled out their description, show a bio on their entries.
-if ( get_the_author_meta( 'description' ) ) : ?>
-					<div id="entry-author-info">
-						<div id="author-avatar">
-							<?php echo get_avatar( get_the_author_meta( 'user_email' ), apply_filters( 'aha2010_author_bio_avatar_size', 60 ) ); ?>
-						</div><!-- #author-avatar -->
-						<div id="author-description">
-							<h2><?php printf( __( 'About %s', 'aha2010' ), get_the_author() ); ?></h2>
-							<?php the_author_meta( 'description' ); ?>
-						</div><!-- #author-description	-->
-					</div><!-- #entry-author-info -->
-<?php endif; ?>
-
-<?php
-	/* Since we called the_post() above, we need to
-	 * rewind the loop back to the beginning that way
-	 * we can run the loop properly, in full.
-	 */
-	rewind_posts();
-
 	/* Run the loop for the author archive page to output the authors posts
 	 * If you want to overload this in a child theme then include a file
 	 * called loop-author.php and that will be used instead.
 	 */
 	 get_template_part( 'loop', 'author' );
+endif; //End profile view diversion.
 ?>
 			</div><!-- #content -->
 		</div><!-- #container -->

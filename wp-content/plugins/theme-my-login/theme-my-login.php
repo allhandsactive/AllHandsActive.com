@@ -1,115 +1,107 @@
 <?php
 /*
 Plugin Name: Theme My Login
-Plugin URI: http://www.jfarthing.com/wordpress-plugins/theme-my-login
+Plugin URI: http://www.jfarthing.com/wordpress-plugins/theme-my-login/
 Description: Themes the WordPress login, registration and forgot password pages according to your theme.
-Version: 5.1.6
+Version: 6.1.4
 Author: Jeff Farthing
 Author URI: http://www.jfarthing.com
 Text Domain: theme-my-login
 */
 
-// Set the default module directory
-if ( !defined('TML_MODULE_DIR') )
-    define('TML_MODULE_DIR', WP_PLUGIN_DIR . '/theme-my-login/modules');
+// Allow custom functions file
+if ( file_exists( WP_PLUGIN_DIR . '/theme-my-login-custom.php' ) )
+	include_once( WP_PLUGIN_DIR . '/theme-my-login-custom.php' );
 
-// Require global configuration class file
-require_once( WP_PLUGIN_DIR . '/theme-my-login/includes/class.php' );
+/**
+ * Holds the absolute location of Theme My Login
+ *
+ * @since 6.0
+ */
+if ( !defined( 'TML_ABSPATH' ) )
+	define( 'TML_ABSPATH', dirname( __FILE__ ) );
 
-// Declare $theme_my_login as global for use within functions
-global $theme_my_login;
+/**
+ * Holds the name of the Theme My Login directory
+ *
+ * @since 6.0
+ */
+if ( !defined( 'TML_DIRNAME' ) )
+	define( 'TML_DIRNAME', basename( TML_ABSPATH ) );
 
-// Initialize global configuration class
-$theme_my_login = new Theme_My_Login();
+/**
+ * For developers, setting this to true will output useful debug information
+ * such as memory usage at specific hooks.
+ *
+ * @since 6.0
+ */
+if ( !defined( 'TML_DEBUG' ) )
+	define( 'TML_DEBUG', false );
 
-// Require general plugin functions file
-require_once( WP_PLUGIN_DIR . '/theme-my-login/includes/functions.php' );
+// Require a few needed files
+require_once( TML_ABSPATH . '/includes/class-theme-my-login.php' );
+require_once( TML_ABSPATH . '/includes/class-plugin-options.php' );
+require_once( TML_ABSPATH . '/includes/class-theme-my-login-template.php' );
+require_once( TML_ABSPATH . '/includes/class-theme-my-login-module.php' );
+require_once( TML_ABSPATH . '/includes/class-theme-my-login-widget.php' );
 
-// Load the plugin textdomain
-load_plugin_textdomain('theme-my-login', '', 'theme-my-login/language');
+/**
+ * Theme My Login object
+ * @global object $theme_my_login_object
+ * @since 6.0
+ */
+$GLOBALS['theme_my_login_object'] =& new Theme_My_Login();
+
+/**
+ * Holds the reference to @see $theme_my_login_object
+ * Use this global for interfacing
+ * @global object $theme_my_login
+ * @since 1.0
+ */
+$GLOBALS['theme_my_login'] =& $GLOBALS['theme_my_login_object'];
 
 // Load active modules
-wdbj_tml_load_active_modules();
+foreach ( $GLOBALS['theme_my_login']->get_active_and_valid_modules() as $module )
+	include_once( $module );
+unset( $module );
 
-// Include admin-functions.php for install/uninstall process
+do_action( 'tml_modules_loaded' );
+
 if ( is_admin() ) {
-    require_once( WP_PLUGIN_DIR . '/theme-my-login/admin/includes/admin.php' );
-    require_once( WP_PLUGIN_DIR . '/theme-my-login/admin/includes/module.php' );
-	
-    register_activation_hook(__FILE__, 'wdbj_tml_install');
-    register_uninstall_hook(__FILE__, 'wdbj_tml_uninstall');
-	
-	add_action('admin_init', 'wdbj_tml_admin_init');
-    add_action('admin_menu', 'wdbj_tml_admin_menu');
-	
-	// Display warning notices for function overrides
-	if ( function_exists('wp_new_user_notification') )
-		add_action('tml_settings_page', 'wdbj_tml_add_new_user_notification_override_notice');
-	if ( function_exists('wp_password_change_notification') )
-		add_action('tml_settings_page', 'wdbj_tml_add_password_change_notification_override_notice');
+	require_once( TML_ABSPATH . '/admin/class-theme-my-login-admin.php' );
+	/**
+	 * Theme My Login Admin object
+	 * @global object $theme_my_login_admin
+	 * @since 6.0
+	 */
+	$GLOBALS['theme_my_login_admin'] =& new Theme_My_Login_Admin();
 }
 
-// Load pluggable functions after modules (in case a module needs to override a function)
-require_once( WP_PLUGIN_DIR . '/theme-my-login/includes/pluggable-functions.php' );
-
-add_action('plugins_loaded', 'wdbj_tml_load');
-function wdbj_tml_load() {
-	global $pagenow;
-	
-	// Bailout if we're at the default login
-	if ( 'wp-login.php' == $pagenow )
-		return;
-	
-	require_once( WP_PLUGIN_DIR . '/theme-my-login/includes/hook-functions.php' );
-	
-    do_action('tml_load');
-
-    add_action('template_redirect', 'wdbj_tml_template_redirect');
-    
-    add_filter('the_title', 'wdbj_tml_the_title', 10, 2);
-    add_filter('single_post_title', 'wdbj_tml_single_post_title');
-	
-	if ( wdbj_tml_get_option('rewrite_links') )
-		add_filter('site_url', 'wdbj_tml_site_url', 10, 3);
-		
-	add_filter('wp_list_pages_excludes', 'wdbj_tml_list_pages_excludes');
-	add_filter('wp_list_pages', 'wdbj_tml_list_pages');
-	add_filter('page_link', 'wdbj_tml_page_link', 10, 2);
-	
-	add_filter('wp_setup_nav_menu_item', 'wdbj_tml_setup_nav_menu_item');
-    
-	add_shortcode('theme-my-login-page', 'wdbj_tml_page_shortcode');
-	add_shortcode('theme-my-login', 'wdbj_tml_shortcode');
-    
-    if ( wdbj_tml_get_option('enable_widget') ) {
-        require_once( WP_PLUGIN_DIR . '/theme-my-login/includes/widget.php' );
-		add_action('widgets_init', 'wdbj_tml_register_widget');
-		function wdbj_tml_register_widget() {
-			return register_widget("Theme_My_Login_Widget");
-		}
-    }
+if ( function_exists( 'is_multisite' ) && is_multisite() ) {
+	require_once( TML_ABSPATH . '/includes/class-theme-my-login-ms-signup.php' );
+	/**
+	 * Theme My Login MS Signup object
+	 * @global object $theme_my_login_ms_signup
+	 * @since 6.1
+	 */
+	$GLOBALS['theme_my_login_ms_signup'] =& new Theme_My_Login_MS_Signup();
 }
 
-function wdbj_tml_template_redirect() {
-    if ( is_page(wdbj_tml_get_option('page_id')) || wdbj_tml_get_option('enable_template_tag') || is_active_widget(false, null, 'theme-my-login') ) {
-	
-		wdbj_tml_set_error();
-	
-		do_action('tml_init');
+if ( defined( 'TML_DEBUG' ) && TML_DEBUG )
+	include_once( TML_ABSPATH . '/includes/class-theme-my-login-debug.php' );
 
-        if ( wdbj_tml_get_option('enable_css') )
-            wdbj_tml_get_css();
-            
-        require_once( WP_PLUGIN_DIR . '/theme-my-login/includes/login-actions.php' );
-    }
+if ( !function_exists( 'theme_my_login' ) ) :
+/**
+ * Displays a TML instance
+ *
+ * @see Theme_My_Login::shortcode() for $args parameters
+ * @since 6.0
+ *
+ * @param string|array $args Template tag arguments
+ */
+function theme_my_login( $args = '' ) {
+	echo $GLOBALS['theme_my_login']->shortcode( wp_parse_args( $args ) );
 }
-
-// Template tag
-function theme_my_login($args = '') {
-	if ( ! wdbj_tml_get_option('enable_template_tag') )
-		return false;		
-	$args = wp_parse_args($args);
-	echo wdbj_tml_shortcode($args);
-}
+endif;
 
 ?>

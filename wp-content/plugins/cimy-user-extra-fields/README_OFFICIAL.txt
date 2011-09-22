@@ -37,8 +37,11 @@ Following WordPress hidden fields can be enabled during registration:
 
 Other features:
  * reCAPTCHA
+ * image upload with crop/resize functions
+ * custom welcome email (non MS installations)
  * custom registration logo (non MS installations)
  * email confirmation (non MS installations)
+ * form confirmation (non MS installations)
  * much more!
 
 The plug-in adds two new menu voices in the admin for the administrator and two for users.
@@ -50,8 +53,8 @@ WordPress and WordPress MultiSite per-blog registration:
     2. "Settings -> Cimy User Extra Fields" - lets administrators add as many new fields as are needed to the users' profile, giving the possibility to set some interesting rules.
 
 Wordpress MultiSite unique registration:
-    1. "Super Admin -> Users Extended" - lets you show users lists with the new fields that are created
-    2. "Super Admin -> Cimy User Extra Fields" - lets administrators add as many new fields as are needed to the users' profile, giving the possibility to set some interesting rules.
+    1. "Network Admin -> Users Extended" - lets you show users lists with the new fields that are created
+    2. "Network Admin -> Cimy User Extra Fields" - lets administrators add as many new fields as are needed to the users' profile, giving the possibility to set some interesting rules.
 
 Rules are:
 
@@ -101,8 +104,8 @@ Bugs or suggestions can be mailed at: cimmino.marco@gmail.com
 
 REQUIREMENTS:
  * PHP >= 5.0.0
- * WORDPRESS >= 3.0.x
- * WORDPRESS MultiSite >= 3.0.x
+ * WORDPRESS >= 3.1.x
+ * WORDPRESS MultiSite >= 3.1.x
  * MYSQL >= 4.1.2
 
 INSTALLATION:
@@ -116,7 +119,7 @@ If you want that ALL Blogs on your MultiSite installation follow the same regist
 Every blog will have shared registration page and only the Super Admin can change it.
  - unpack the package under 'wp-content/mu-plugins' directory (if this directory does not exist, create it);
  - be sure that cimy_user_extra_fields.php is outside Cimy folder (move it if necessary);
- - go to "Super Admin -> Cimy User Extra Fields", press "Fix the problem" button and confirm.
+ - go to "Network Admin -> Cimy User Extra Fields", press "Fix the problem" button and confirm.
 
 2) Per-Blog registration
 If you want that every single Blog can define its own Extra Fields then you should choose this installation.
@@ -458,6 +461,19 @@ HOW TO USE AVATAR SUPPORT:
 Create the same directory needed for PICTURE support, avatars will be stored in a subdirectory and will not interfere with other pictures uploaded by the same plug-in
 
 
+ADVANCED OPTIONS:
+Advanced options have been introduced in v2.1.0 to accommodate some extra options per field.
+Multiple options should be comma separated ','
+
+[AVATAR, PICTURE]
+no-thumb=1 - do not crate the thumbnail (if equalTO rule is set it will resize the original image)
+crop_ratio=4:3 - fix cropping ratio
+crop_x1=0,crop_y1=0,crop_x2=80,crop_y2=90 - pre-select cropping window
+
+[AVATAR, PICTURE, FILE]
+filename=default.pdf - rename the uploaded file to the given file name
+
+
 KNOWN ISSUES:
 - if you add too many fields in the "Users Extended" menu they will go out of frame
 - some rules are never applied if you are using PHP 4.x please update to PHP 5.x as stated in the REQUIREMENTS
@@ -467,6 +483,7 @@ KNOWN ISSUES:
 - dropdown issues:
   - custom value is not supported
   - comma is not allowed as it is the delimiter
+- registration confirmation does not work if you use Theme My Login plug-in
 
 
 FAQ:
@@ -506,7 +523,9 @@ do_action('register_post');
 Q1: I got "Fatal error: Allowed memory size of 8388608 bytes exhausted [..]", why?
 Q2: I got blank pages after activating this plug-in, why?
 
-A: Because your memory limit is too low, to fix it edit your php.ini and search memory_limit key and put at least to 12M
+A1: Because your memory limit is too low, to fix it edit your php.ini and search memory_limit key and put at least to 12M
+A2: If you do not have access to your php.ini you can try this workaround (might not work)
+http://codex.wordpress.org/Editing_wp-config.php#Increasing_memory_allocated_to_PHP
 
 
 Q: Your plug-in is great, but when you will add support to add more than one choice in radio and dropdown fields?
@@ -567,7 +586,7 @@ A: Sure, visit the donation page or contact me via e-mail.
 Q: Can I hack this plug-in and hope to see my code in the next release?
 
 A: For sure, this is just happened and can happen again if you write useful new features and good code. Try to see how I maintain the code and try to do the same (or even better of course), I have rules on how I write it, don't want "spaghetti code", I'm Italian and I want spaghetti only on my plate.
-There is no guarantee that your patch will reach Cimy User Extra Fields, but feel free to do a fork of this project and distribuite it, this is GPL!
+There is no guarantee that your patch will hit an official upcoming release of the plug-in, but feel free to do a fork of this project and distribute it, this is GPL!
 
 
 Q1: I have found a bug what can I do?
@@ -587,11 +606,37 @@ A lot of times I cannot reproduce the problem and I need more details, so if you
 
 
 CHANGELOG:
+v2.2.0 - 04/09/2011
+- Added textarea and textarea-rich class in the profile area (thanks to Evaluator)
+- Added case sensitive check for regex equalTo rules (thanks to Juliette for the patch)
+- Fixed WordPress MS unique installation was broken since WP 3.1 (thanks to RaSo0l)
+- Fixed CSS file inclusion, should fix RTL admin layout mess (thanks to Moti Nisim)
+- Fixed extra slash present into image uris (thanks to zyrq)
+- Fixed dropdown selection when illegal characters are present (introduced with v2.0.5) (thanks to Jared)
+- Fixed some URLs still were not caring about https when used
+- Fixed captcha shouldn't show on form confirmation only
+- Fixed textarea-rich pictures had relative instead of absolute urls (thanks to David Alexander)
+- Fixed dropdown-multi were not saved when form confirmation is turned on
+- Fixed images shouldn't be shows if not present on the disk (form confirmation only)
+- Fixed plug-in description
+- Code cleanup
+
+v2.1.1 - 11/07/2011
+- Fixed compatibility with Theme My Login plug-in (introduced with v2.1.0) (thanks to Michele and Mark)
+- Fixed compatibility with WP-reCAPTCHA plug-in (thanks to des for the patch)
+
+v2.1.0 - 28/06/2011
+- Added confirmation registration (non MS only) (thanks to Marcello Foglia for sponsoring it)
+- Added custom welcome email (non MS only) (thanks to Marcello Foglia for sponsoring it)
+- Added crop functionalities for picture and avatar fields (thanks to Marcello Foglia for sponsoring it)
+- Added advanced options (thanks to Marcello Foglia for sponsoring it)
+- Code cleanup
+
 v2.0.5 - 11/05/2011
 - Added 'view_cimy_extra_fields' capability and rule to Show field if user has this cap (thanks to Matt)
 - A&U Extended is now renamed to Users Extended
 - Updated Users Extended page to use newer functions and to show # of search results
-- Updated equalTo field can now accomodate up to 500 characters string
+- Updated equalTo field can now accommodate up to 500 characters string
 - Fixed several html bugs in Users Extended page
 - Fixed several (but minor) security issues
 

@@ -11,10 +11,10 @@ function wptouchSpinnerDone() {
 	}	
 }
 
-jQuery(document).ready(function(jQuery) {
+jQuery( document ).ready( function() {
 
 	setTimeout(function() { jQuery('#wptouchupdated').fadeIn(250); }, 750);
-	setTimeout(function() { jQuery( '#wptouchupdated' ).hide("slide", { direction: "up" }, 450);}, 2750);
+	setTimeout(function() { jQuery( '#wptouchupdated' ).fadeOut(200); }, 2750);
 
 	jQuery('#header-text-color, #header-background-color, #header-border-color, #link-color').ColorPicker({
 		onSubmit: function(hsb, hex, rgb, el) { jQuery(el).val(hex); jQuery(el).ColorPickerHide(); },
@@ -42,4 +42,16 @@ jQuery(document).ready(function(jQuery) {
 		},
 		'dataType': 'html'
 	});
+	
+jQuery(function(){
+	var tabindex = 1;
+	jQuery('input,select').each(function() {
+		if (this.type != "hidden") {
+			var $input = jQuery(this);
+			$input.attr("tabindex", tabindex);
+			tabindex++;
+		}
+	});
+});
+
 });

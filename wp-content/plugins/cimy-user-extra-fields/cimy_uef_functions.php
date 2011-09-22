@@ -284,8 +284,12 @@ function get_cimyFieldValue($user_id, $field_name, $field_value=false) {
 
 	$field_data = cimy_change_radio_labels($field_data, $user_id);
 
-	if (($field_name) && ($user_id))
-		$field_data = $field_data[0]['VALUE'];
+	if (($field_name) && ($user_id)) {
+		if (isset($field_data[0]['VALUE']))
+			$field_data = $field_data[0]['VALUE'];
+		else
+			$field_data = "";
+	}
 
 	return $field_data;
 }
@@ -348,26 +352,27 @@ function cimy_dropDownOptions($values, $selected) {
 	$sel_items = explode(",", $selected);
 	$html_options = "";
 	$sel_i = 0;
-	
+
 	foreach ($items as $item) {
 		$item_clean = trim($item, "\t\n\r");
 
 		$html_options.= "\n\t\t\t";
-		$html_options.= '<option value="'.$item_clean.'"';
-	
-		if  (isset($sel_items[$sel_i])) {
-			if ($sel_items[$sel_i] == $item_clean) {
+		$html_options.= '<option value="'.esc_attr($item_clean).'"';
+
+		if (isset($sel_items[$sel_i])) {
+			$is_selected = selected($item_clean, $sel_items[$sel_i], false);
+			if (!empty($is_selected)) {
 				$sel_i++;
-				$html_options.= ' selected="selected"';
+				$html_options.= $is_selected;
 			}
 		}
 
-		$html_options.= ">".$item_clean."</option>";
+		$html_options.= ">".esc_html($item_clean)."</option>";
 	}
-	
+
 	$ret = array();
 	$ret['html'] = $html_options;
-	$ret['label'] = $label;
+	$ret['label'] = cimy_uef_sanitize_content($label);
 	
 	return $ret;
 }
@@ -424,24 +429,14 @@ function cimy_fieldsetOptions($selected=0, $order="", $select_all=false) {
 		$html.= "\t<option value=\"$i\" selected=\"selected\">".__("no fieldset", $cimy_uef_domain)."</option>\n";
 	}
 	else {
-		if ($select_all) {
-			if (-1 == $selected)
-				$selected_txt = " selected=\"selected\"";
-			else
-				$selected_txt = "";
-			$html.= "\t<option value=\"-1\"".$selected_txt.">".__("All")."</option>\n";
-		}
+		if ($select_all)
+			$html.= "\t<option value=\"-1\"".selected(-1, $selected, false).">".__("All")."</option>\n";
 
 		if (!empty($options['fieldset_title'])) {
 			$fieldset_titles = explode(',', $options['fieldset_title']);
 
 			foreach ($fieldset_titles as $fieldset) {
-				if ($i == $selected)
-					$selected_txt = " selected=\"selected\"";
-				else
-					$selected_txt = "";
-		
-				$html.= "\t<option value=\"$i\"".$selected_txt.">".$fieldset."</option>\n";
+				$html.= "\t<option value=\"$i\"".selected($i, $selected, false).">".esc_html($fieldset)."</option>\n";
 				$i++;
 			}
 		}
@@ -527,6 +522,89 @@ function cimy_uef_is_field_disabled($type, $edit_rule, $old_value) {
 
 	// field is enabled
 	return false;
+}
+
+function cimy_uef_crop_image($file, $field_id_data) {
+	if (!empty($_POST[$field_id_data."_button"]) && (!empty($_POST[$field_id_data.'_w'])) && (!empty($_POST[$field_id_data.'_h']))) {
+		$targ_w = $_POST[$field_id_data.'_w'];
+		$targ_h = $_POST[$field_id_data.'_h'];
+		$jpeg_quality = 100;
+
+		$src = $file;
+		$dst = $file;
+		$size = getimagesize($src);
+		switch ($size["mime"]) {
+			case "image/jpeg":
+				$img_r = imagecreatefromjpeg($src); //jpeg file
+				break;
+			case "image/gif":
+				$img_r = imagecreatefromgif($src); //gif file
+				break;
+			case "image/png":
+				$img_r = imagecreatefrompng($src); //png file
+				break;
+			default:
+				$img_r = false;
+		}
+		if (!empty($img_r)) {
+			$dst_r = ImageCreateTrueColor($targ_w, $targ_h);
+			imagecopyresampled($dst_r, $img_r, 0, 0, $_POST[$field_id_data.'_x1'],$_POST[$field_id_data.'_y1'], $targ_w, $targ_h, $targ_w, $targ_h);
+			switch ($size["mime"]) {
+				case "image/jpeg":
+					imagejpeg($dst_r, $dst, $jpeg_quality); //jpeg file
+					break;
+				case "image/gif":
+					imagegif($dst_r, $dst); //gif file
+					break;
+				case "image/png":
+					imagepng($dst_r, $dst); //png file
+					break;
+			}
+		}
+	}
+}
+
+function cimy_uef_parse_advanced_options($options) {
+	$advanced_options = array();
+	$adv_array = explode(",", $options);
+	foreach ($adv_array as $item) {
+		$tmp_array = explode("=", $item);
+		if (count($tmp_array) < 2)
+			continue;
+		if (strtolower($tmp_array[0]) == "filename")
+			$advanced_options["filename"] = $tmp_array[1];
+		else if (strtolower($tmp_array[0]) == "crop_ratio")
+			$advanced_options["crop_ratio"] = $tmp_array[1];
+		else if (strtolower($tmp_array[0]) == "crop_x1")
+			$advanced_options["crop_x1"] = $tmp_array[1];
+		else if (strtolower($tmp_array[0]) == "crop_y1")
+			$advanced_options["crop_y1"] = $tmp_array[1];
+		else if (strtolower($tmp_array[0]) == "crop_x2")
+			$advanced_options["crop_x2"] = $tmp_array[1];
+		else if (strtolower($tmp_array[0]) == "crop_y2")
+			$advanced_options["crop_y2"] = $tmp_array[1];
+		else if (strtolower($tmp_array[0]) == "no-thumb")
+			$advanced_options["no-thumb"] = $tmp_array[1];
+	}
+	return $advanced_options;
+}
+
+function cimy_uef_get_dir_or_filename($user_login, $url="", $is_thumbnail=false) {
+	global $cimy_uef_plugins_dir, $cuef_upload_path;
+
+	$blog_path = $cuef_upload_path;
+	if (($cimy_uef_plugins_dir == "plugins") && (is_multisite())) {
+		global $blog_id;
+
+		$blog_path .= $blog_id."/";
+	}
+
+	if (empty($url))
+		return $blog_path.$user_login;
+	else if ($is_thumbnail)
+		return $blog_path.$user_login."/".cimy_get_thumb_path(basename($url));
+	else
+		return $blog_path.$user_login."/".basename($url);
 }
 
 ?>

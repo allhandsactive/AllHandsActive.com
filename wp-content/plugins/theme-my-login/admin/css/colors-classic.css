@@ -15,7 +15,7 @@
 .ui-tabs .ui-tabs-nav li, .ui-tabs .ui-tabs-panel .ui-tabs-nav li { position: relative; float: left; margin: 0; padding: 0; }
 .ui-tabs .ui-tabs-nav li a, .ui-tabs .ui-tabs-panel .ui-tabs-nav li a { float: left; text-decoration: none; padding: .4em 1em; }
 .ui-tabs .ui-tabs-panel, .ui-tabs .ui-tabs-panel .ui-tabs-panel { padding: 0 0 1em 0; display: block; border: none; }
-.ui-tabs .ui-tabs-panel .ui-tabs-panel { padding: 0; }
+.ui-tabs .ui-tabs-panel .ui-tabs-panel { padding: 10px; }
 .ui-tabs .ui-tabs-hide, .ui-tabs .ui-tabs-panel .ui-tabs-hide { display: none !important; }
 
 .ui-widget-content {

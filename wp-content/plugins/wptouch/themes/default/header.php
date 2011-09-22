@@ -2,7 +2,7 @@
 include( dirname(__FILE__) . '/../core/core-header.php' ); 
 // End WPtouch Core Header
 ?>
-<body class="<?php wptouch_core_body_background(); ?>">
+<body class="<?php wptouch_core_body_background(); ?> <?php wptouch_idevice_classes(); ?>">
 <!-- New noscript check, we need js on now folks -->
 <noscript>
 <div id="noscript-wrap">
@@ -25,12 +25,12 @@ include( dirname(__FILE__) . '/../core/core-header.php' );
 	<div id="wptouch-login">
 		<div id="wptouch-login-inner">
 			<form name="loginform" id="loginform" action="<?php bloginfo('wpurl'); ?>/wp-login.php" method="post">
-				<label><input type="text" name="log" id="log" onfocus="if (this.value == 'username') {this.value = ''}" tabindex="1" value="username" /></label>
-				<label><input type="password" name="pwd"  onfocus="if (this.value == 'password') {this.value = ''}" tabindex="2" id="pwd" value="password" /></label>
+				<label><input type="text" name="log" id="log" placeholder="<?php _e("Username", "wptouch"); ?>" tabindex="1" value="" /></label>
+				<label><input type="password" name="pwd" placeholder="<?php _e("Password", "wptouch"); ?>" tabindex="2" id="pwd" value="" /></label>
 				<input type="hidden" name="rememberme" value="forever" />
-				<input type="hidden" id="logsub" name="submit" value="<?php _e("Login", "wptouch"); ?>" tabindex="3" />
+				<input type="submit" id="logsub" name="submit" value="<?php _e("Login", "wptouch"); ?>" tabindex="3" />
 				<input type="hidden" name="redirect_to" value="<?php echo $_SERVER['REQUEST_URI']; ?>"/>
-			<a href="javascript:return false;" onclick="bnc_jquery_login_toggle();"><img class="head-close" src="<?php echo compat_get_plugin_url( 'wptouch' ); ?>/themes/core/core-images/head-close.png" alt="close" /></a>
+			<a href="javascript:return false;"><img class="head-close" src="<?php echo compat_get_plugin_url( 'wptouch' ); ?>/themes/core/core-images/head-close.png" alt="close" /></a>
 			</form>
 		</div>
 	</div>
@@ -38,10 +38,10 @@ include( dirname(__FILE__) . '/../core/core-header.php' );
  <!-- #start The Search Overlay -->
 	<div id="wptouch-search"> 
  		<div id="wptouch-search-inner">
-			<form method="get" id="searchform" action="<?php bloginfo('home'); ?>/">
-				<input type="text" value="<?php echo __( "Search...", "wptouch" ); ?>" onfocus="if (this.value == '<?php _e("Search", "wptouch"); ?>') {this.value = ''}" name="s" id="s" /> 
-				<input name="submit" type="hidden" tabindex="1" value="<?php _e("Search...", "wptouch"); ?>"  />
-			<a href="javascript:return false;" onclick="bnc_jquery_search_toggle(); $wptouch('input#s').blur();"><img class="head-close" src="<?php echo compat_get_plugin_url( 'wptouch' ); ?>/themes/core/core-images/head-close.png" alt="close" /></a>
+			<form method="get" id="searchform" action="<?php bloginfo('url'); ?>/">
+				<input type="text" placeholder="<?php echo __( "Search...", "wptouch" ); ?>" name="s" id="s" /> 
+				<input name="submit" type="submit" tabindex="1" id="search-submit" value="<?php _e("Search...", "wptouch"); ?>"  />
+			<a href="javascript:return false;"><img class="head-close" src="<?php echo compat_get_plugin_url( 'wptouch' ); ?>/themes/core/core-images/head-close.png" alt="close" /></a>
 			</form>
 		</div>
 	</div>
@@ -55,7 +55,7 @@ include( dirname(__FILE__) . '/../core/core-header.php' );
 	    	    	<?php if (bnc_is_cats_button_enabled()) { wptouch_cats_link(); } ?>
 	    	    	<?php if (bnc_is_login_button_enabled()) { ?>
 						<?php if (!is_user_logged_in()) { ?>
-						    <a href="#head-account" onclick="bnc_jquery_login_toggle();"><?php _e( "Login", "wptouch" ); ?></a>
+						    <a id="loginopen" href="#head-account"><?php _e( "Login", "wptouch" ); ?></a>
 						<?php } else { ?>
 							 <a href="#head-account"><?php _e( "My Account", "wptouch" ); ?></a>
 						<?php } ?>
@@ -71,13 +71,13 @@ include( dirname(__FILE__) . '/../core/core-header.php' );
 	
 	    	    <?php if (bnc_is_cats_button_enabled()) { ?>
 					<ul id="head-cats">
-		  	 			<?php bnc_get_ordered_cat_list(); ?>
+		  	 			<?php bnc_get_ordered_cat_list( 35 ); ?>
 					</ul>
 				<?php } ?>
 	
 	    	    <?php if (bnc_is_tags_button_enabled()) { ?>
 					<ul id="head-tags">
-						<li><?php wp_tag_cloud('smallest=13&largest=13&unit=px&number=20&order=asc&format=list'); ?></li>
+						<li><?php wptouch_ordered_tag_list( 35 ); ?></li>
 					</ul>
 				<?php } ?>
 
@@ -116,28 +116,28 @@ include( dirname(__FILE__) . '/../core/core-header.php' );
 	<div id="headerbar-title">
 		<!-- This fetches the admin selection logo icon for the header, which is also the bookmark icon -->
 		<img id="logo-icon" src="<?php echo bnc_get_title_image(); ?>" alt="<?php $str = bnc_get_header_title(); echo stripslashes($str); ?>" />
-		<a href="<?php bloginfo('home'); ?>"><?php wptouch_core_body_sitetitle(); ?></a>
+		<a href="<?php bloginfo('url'); ?>"><?php wptouch_core_body_sitetitle(); ?></a>
 	</div>
 	<div id="headerbar-menu">
-		    <a href="javascript:return false;" onclick="bnc_jquery_menu_drop();"></a>
+		    <a href="javascript:return false;"></a>
 	</div>
 </div>
 
 <div id="drop-fade">
 	<?php if (bnc_is_search_enabled()) { ?>			    
-    	<a id="searchopen" class="top" href="javascript:return false;" onclick="bnc_jquery_search_toggle(); $wptouch('input#s').focus();"><?php _e( 'Search', 'wptouch' ); ?></a>
+    	<a id="searchopen" class="top" href="javascript:return false;"><?php _e( 'Search', 'wptouch' ); ?></a>
 	<?php } ?>
 
 	<?php if (bnc_is_prowl_direct_message_enabled()) { ?>			    
-    	<a id="prowlopen" class="top" href="javascript:return false;" onclick="bnc_jquery_prowl_open();"><?php _e( 'Message', 'wptouch' ); ?></a>
+    	<a id="prowlopen" class="top" href="javascript:return false;"><?php _e( 'Message', 'wptouch' ); ?></a>
 	<?php } ?>
 
 	<?php if ( function_exists( 'wordtwit_get_recent_tweets' ) && wordtwit_is_valid() && bnc_can_show_tweets() ) { ?>		    
-    	<a id="wordtwitopen" class="top" href="javascript:return false;" onclick="bnc_jquery_wordtwit_open();"><?php _e( 'Twitter', 'wptouch' ); ?></a>
+    	<a id="wordtwitopen" class="top" href="javascript:return false;"><?php _e( 'Twitter', 'wptouch' ); ?></a>
 	<?php } ?>
 
 	<?php if ( function_exists( 'gigpress_shows' ) && bnc_is_gigpress_enabled()) { ?>			    
-    	<a id="gigpressopen" class="top" href="javascript:return false;" onclick="bnc_jquery_gigpress_toggle();"><?php _e( 'Tour Dates', 'wptouch' ); ?></a>
+    	<a id="gigpressopen" class="top" href="javascript:return false;"><?php _e( 'Tour Dates', 'wptouch' ); ?></a>
 	<?php } ?>
 
  <!-- #start the Prowl Message Area -->
@@ -209,5 +209,5 @@ include( dirname(__FILE__) . '/../core/core-header.php' );
 	 </div>
  <?php } ?>
 </div>
-<!-- #start the wptouch plugin use check -->
-<?php wptouch_core_header_check_use(); ?>
+<?php 
+wptouch_core_header_check_use();

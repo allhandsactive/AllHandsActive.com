@@ -3,6 +3,7 @@
 	$directory_list = array();
 	
 	if ( current_user_can( 'upload_files' ) ) {
+		check_ajax_referer( 'wptouch-upload' );
 		$upload_dir = compat_get_upload_dir() . "/wptouch/custom-icons" . ltrim( $dir[1], '/' );
 		$dir_paths = explode( '/', $upload_dir );
 		$dir = '';
@@ -30,4 +31,3 @@
 			} else echo __( '<p style="color:orange; padding-top:10px">Image too large. try something like 59x60.</p>', 'wptouch' );
 		}
 	} else echo __( '<p style="color:orange; padding-top:10px">Insufficient privileges.</p><p>You need to either be an admin or have more control over your server.</p>', 'wptouch' );
-?>

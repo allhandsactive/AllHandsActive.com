@@ -209,6 +209,13 @@ function cimy_plugin_install () {
 			}
 		}
 
+		if (version_compare($options['version'], "2.1.0-beta1", "<=") === true) {
+			$welcome_email = sprintf(__('Username: %s'), "USERNAME") . "\r\n";
+			$welcome_email .= sprintf(__('Password: %s'), "PASSWORD") . "\r\n";
+			$welcome_email .= "LOGINLINK" . "\r\n";
+			$options["welcome_email"] = $welcome_email;
+		}
+
 		$options['version'] = $cimy_uef_version;
 
 		cimy_set_options($options);
@@ -279,6 +286,10 @@ function cimy_manage_db($command) {
 	if (!cimy_check_admin('activate_plugins'))
 		return;
 
+	$welcome_email = sprintf(__('Username: %s'), "USERNAME") . "\r\n";
+	$welcome_email .= sprintf(__('Password: %s'), "PASSWORD") . "\r\n";
+	$welcome_email .= "LOGINLINK" . "\r\n";
+
 	$options = array(
 		'extra_fields_title' => __("Extra Fields", $cimy_uef_domain),
 		'users_per_page' => 50,
@@ -286,6 +297,7 @@ function cimy_manage_db($command) {
 		'wp_hidden_fields' => array(),
 		'fieldset_title' => '',
 		'captcha' => 'none',
+		'welcome_email' => $welcome_email,
 	);
 
 	switch ($command) {

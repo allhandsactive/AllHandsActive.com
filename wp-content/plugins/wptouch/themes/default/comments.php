@@ -12,6 +12,7 @@
 <!-- You can start editing below here... but make a backup first!  -->
 
 <div id="comment_wrapper">
+<?php if ($comments) : ?>
 <?php 
 	echo '<h3 onclick="bnc_showhide_coms_toggle();" id="com-head"><img id="com-arrow" src="' . compat_get_plugin_url( 'wptouch' ) . '/themes/core/core-images/com_arrow.png" alt="arrow" />';
 	$comment_string1 = __( 'No Responses Yet', 'wptouch' );
@@ -20,6 +21,7 @@
 	comments_number( $comment_string1, $comment_string2, $comment_string3 );
 	echo '</h3>';
 ?>
+<?php endif; ?>
 
 	<ol class="commentlist" id="commentlist">
 		<?php if ($comments) : ?>
@@ -34,8 +36,8 @@
 											<?php if (is_single()) { ?>
 												<span><?php wptouch_moderate_comment_link(get_comment_ID()); ?></span>
 											<?php } ?>
-											<?php if (function_exists('time_since')) { 
-												echo time_since(abs(strtotime($comment->comment_date_gmt . " GMT")), time()) . " " . __( 'ago', 'wptouch' ); } else { the_time('F jS, Y'); 
+											<?php if (function_exists('wptouch_time_since')) { 
+												echo wptouch_time_since(abs(strtotime($comment->comment_date_gmt . " GMT")), time()) . " " . __( 'ago', 'wptouch' ); } else { the_time('F jS, Y'); 
 											} ?>	
 										</div>									
 
@@ -76,7 +78,7 @@
 		<?php if (get_option('comment_registration') && !$user_ID) : ?>
 			<center>
 			<h1>
-				<?php sprintf( __( 'You must %slogin</a> or %sregister</a> to comment', 'wptouch' ), '<a href="' . get_option('wpurl') . '/wp-login.php">', '<a href="' . get_option('wpurl') . '"/wp-register.php">') ; ?>
+				<?php sprintf( __( 'You must %slogin</a> or %sregister</a> to comment', 'wptouch' ), '<a href="' . get_bloginfo('wpurl') . '/wp-login.php">', '<a href="' . get_bloginfo('wpurl') . '"/wp-register.php">') ; ?>
 			</h1>
 			</center>
 
@@ -89,7 +91,7 @@
 				<?php _e( "(If your comment requires moderation it will be added soon.)", "wptouch" ); ?>
 		</div>
 
-		<form action="<?php echo get_option('siteurl'); ?>/wp-comments-post.php" method="post" id="commentform">
+		<form action="<?php bloginfo('wpurl'); ?>/wp-comments-post.php" method="post" id="commentform">
 
 	<?php if ($user_ID) : ?>
 
@@ -133,4 +135,4 @@
   </div><!--textinputwrap div-->
 </div><!-- comment_wrapper -->
 
-<?php endif; // if you delete this the sky will fall on your head ?>
+<?php endif; // if you delete this the sky will fall on your head

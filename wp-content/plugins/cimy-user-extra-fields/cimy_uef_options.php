@@ -24,6 +24,7 @@ function cimy_save_options() {
 	$options['aue_hidden_fields'] = array();
 	$options['wp_hidden_fields'] = array();
 
+	$options['welcome_email'] = stripslashes($_POST['welcome_email']);
 	$options['extra_fields_title'] = stripslashes($_POST['extra_fields_title']);
 	$options['extra_fields_title'] = substr($options['extra_fields_title'], 0, $max_length_extra_fields_title);
 
@@ -120,6 +121,7 @@ function cimy_save_options() {
 	$action = "add";
 
 	(isset($_POST['confirm_email'])) ? $options['confirm_email'] = true : $options['confirm_email'] = false;
+	(isset($_POST['confirm_form'])) ? $options['confirm_form'] = true : $options['confirm_form'] = false;
 	if ($options['confirm_email'])
 		cimy_force_signup_table_creation();
 	(isset($_POST['redirect_to'])) ? $options['redirect_to'] = $_POST['redirect_to'] : $options['redirect_to'] = "";
@@ -167,120 +169,19 @@ function cimy_save_options() {
 		else
 			$options['password_meter'] = false;
 
-		if (isset($_POST['show_wp_firstname'])) {
-			array_push($options['wp_hidden_fields'], 'firstname');
-			
-			if (!in_array("firstname", $old_wp_hidden_fields)) {
-				$data = $wp_hidden_fields['firstname'];
+		$db_wp_fields_independent = array("firstname", "lastname", "nickname", "website", "aim", "yahoo", "jgt", "bio-info");
+		foreach ($db_wp_fields_independent as $wp_field_independent) {
+			if (isset($_POST['show_wp_'.$wp_field_independent])) {
+				array_push($options['wp_hidden_fields'], $wp_field_independent);
 				
-				$data['num_fields'] = $tot_wp_hidden_fields;
-				$tot_wp_hidden_fields++;
-				
-				cimy_save_field($action, $wpdb_wp_fields_table, $data);
-			}
-		}
-		
-		if (isset($_POST['show_wp_lastname'])) {
-			array_push($options['wp_hidden_fields'], 'lastname');
-			
-			if (!in_array("lastname", $old_wp_hidden_fields)) {
-				$data = $wp_hidden_fields['lastname'];
-				
-				$data['num_fields'] = $tot_wp_hidden_fields;
-				$tot_wp_hidden_fields++;
-				
-				cimy_save_field($action, $wpdb_wp_fields_table, $data);
-			}
-		}
-	
-		if (isset($_POST['show_wp_nickname'])) {
-			array_push($options['wp_hidden_fields'], 'nickname');
-			
-			if (!in_array("nickname", $old_wp_hidden_fields)) {
-				$data = $wp_hidden_fields['nickname'];
-				
-				$data['num_fields'] = $tot_wp_hidden_fields;
-				$tot_wp_hidden_fields++;
-				
-				cimy_save_field($action, $wpdb_wp_fields_table, $data);
-			}
-		}
-		
-		if (isset($_POST['show_wp_email'])) {
-			array_push($options['wp_hidden_fields'], 'email');
-			
-			if (!in_array("email", $old_wp_hidden_fields)) {
-				$data = $wp_hidden_fields['email'];
-				
-				$data['num_fields'] = $tot_wp_hidden_fields;
-				$tot_wp_hidden_fields++;
-				
-				cimy_save_field($action, $wpdb_wp_fields_table, $data);
-			}
-		}
-		
-		if (isset($_POST['show_wp_website'])) {
-			array_push($options['wp_hidden_fields'], 'website');
-			
-			if (!in_array("website", $old_wp_hidden_fields)) {
-				$data = $wp_hidden_fields['website'];
-				
-				$data['num_fields'] = $tot_wp_hidden_fields;
-				$tot_wp_hidden_fields++;
-				
-				cimy_save_field($action, $wpdb_wp_fields_table, $data);
-			}
-		}
-		
-		if (isset($_POST['show_wp_aim'])) {
-			array_push($options['wp_hidden_fields'], 'aim');
-			
-			if (!in_array("aim", $old_wp_hidden_fields)) {
-				$data = $wp_hidden_fields['aim'];
-				
-				$data['num_fields'] = $tot_wp_hidden_fields;
-				$tot_wp_hidden_fields++;
-				
-				cimy_save_field($action, $wpdb_wp_fields_table, $data);
-			}
-		}
-		
-		if (isset($_POST['show_wp_yahoo'])) {
-			array_push($options['wp_hidden_fields'], 'yahoo');
-			
-			if (!in_array("yahoo", $old_wp_hidden_fields)) {
-				$data = $wp_hidden_fields['yahoo'];
-				
-				$data['num_fields'] = $tot_wp_hidden_fields;
-				$tot_wp_hidden_fields++;
-				
-				cimy_save_field($action, $wpdb_wp_fields_table, $data);
-			}
-		}
-		
-		if (isset($_POST['show_wp_jgt'])) {
-			array_push($options['wp_hidden_fields'], 'jgt');
-			
-			if (!in_array("jgt", $old_wp_hidden_fields)) {
-				$data = $wp_hidden_fields['jgt'];
-				
-				$data['num_fields'] = $tot_wp_hidden_fields;
-				$tot_wp_hidden_fields++;
-				
-				cimy_save_field($action, $wpdb_wp_fields_table, $data);
-			}
-		}
-
-		if (isset($_POST['show_wp_bio-info'])) {
-			array_push($options['wp_hidden_fields'], 'bio-info');
-			
-			if (!in_array("bio-info", $old_wp_hidden_fields)) {
-				$data = $wp_hidden_fields['bio-info'];
-				
-				$data['num_fields'] = $tot_wp_hidden_fields;
-				$tot_wp_hidden_fields++;
-				
-				cimy_save_field($action, $wpdb_wp_fields_table, $data);
+				if (!in_array($wp_field_independent, $old_wp_hidden_fields)) {
+					$data = $wp_hidden_fields[$wp_field_independent];
+					
+					$data['num_fields'] = $tot_wp_hidden_fields;
+					$tot_wp_hidden_fields++;
+					
+					cimy_save_field($action, $wpdb_wp_fields_table, $data);
+				}
 			}
 		}
 	}
@@ -379,67 +280,18 @@ function cimy_show_options($results, $embedded) {
 		}
 
 		$options['fieldset_title'] = esc_attr($options['fieldset_title']);
-		$options['mail_include_fields'] ? $mail_include_fields = ' checked="checked"' : $mail_include_fields = '';
-		$options['confirm_email'] ? $confirm_email = ' checked="checked"' : $confirm_email = '';
-		$options['redirect_to'] == "source" ? $redirect_to_source = ' checked="checked"' : $redirect_to_source = '';
-		($options['captcha'] == "recaptcha") ? $recaptcha = ' checked="checked"' : $recaptcha = '';
-		($options['captcha'] == "securimage") ? $securimage = ' checked="checked"' : $securimage = '';
-		($options['captcha'] == "none") ? $no_captcha = ' checked="checked"' : $no_captcha = '';
+		$welcome_email = $options['welcome_email'];
 		isset($options['recaptcha_public_key']) ? $recaptcha_public_key = $options['recaptcha_public_key'] : $recaptcha_public_key = '';
 		isset($options['recaptcha_private_key']) ? $recaptcha_private_key = $options['recaptcha_private_key'] : $recaptcha_private_key = '';
 
-		in_array('username', $options['aue_hidden_fields']) ? $aue_hide_username = ' checked="checked"' : $aue_hide_username = '';
-		in_array('name', $options['aue_hidden_fields']) ? $aue_hide_name = ' checked="checked"' : $aue_hide_name = '';
-		in_array('email', $options['aue_hidden_fields']) ? $aue_hide_email = ' checked="checked"' : $aue_hide_email = '';
-		in_array('website', $options['aue_hidden_fields']) ? $aue_hide_website = ' checked="checked"' : $aue_hide_website = '';
-		in_array('posts', $options['aue_hidden_fields']) ? $aue_hide_posts = ' checked="checked"' : $aue_hide_posts = '';
-		in_array('role', $options['aue_hidden_fields']) ? $aue_hide_role = ' checked="checked"' : $aue_hide_role = '';
-		
-		in_array('password', $options['wp_hidden_fields']) ? $show_wp_password = ' checked="checked"' : $show_wp_password = '';
-		in_array('password2', $options['wp_hidden_fields']) ? $show_wp_password2 = ' checked="checked"' : $show_wp_password2 = '';
-		$options['password_meter'] ? $show_wp_password_meter = ' checked="checked"' : $show_wp_password_meter = '';
-
-		in_array('firstname', $options['wp_hidden_fields']) ? $show_wp_firstname = ' checked="checked"' : $show_wp_firstname = '';
-		in_array('lastname', $options['wp_hidden_fields']) ? $show_wp_lastname = ' checked="checked"' : $show_wp_lastname = '';
-		in_array('nickname', $options['wp_hidden_fields']) ? $show_wp_nickname = ' checked="checked"' : $show_wp_nickname = '';
-		in_array('website', $options['wp_hidden_fields']) ? $show_wp_website = ' checked="checked"' : $show_wp_website = '';
-		in_array('aim', $options['wp_hidden_fields']) ? $show_wp_aim = ' checked="checked"' : $show_wp_aim = '';
-		in_array('yahoo', $options['wp_hidden_fields']) ? $show_wp_yahoo = ' checked="checked"' : $show_wp_yahoo = '';
-		in_array('jgt', $options['wp_hidden_fields']) ? $show_wp_jgt = ' checked="checked"' : $show_wp_jgt = '';
-		in_array('bio-info', $options['wp_hidden_fields']) ? $show_wp_bio_info = ' checked="checked"' : $show_wp_bio_info = '';
-		
 		$db_options = true;
 	}
 	else {
 		$db_options = false;
 		$options['fieldset_title'] = "";
-		$mail_include_fields= '';
-		$confirm_email = '';
-		$redirect_to_source = '';
-		$recaptcha = '';
+		$welcome_email = '';
 		$recaptcha_public_key = '';
 		$recaptcha_private_key = '';
-		$securimage = '';
-		$no_captcha = ' checked="checked"';
-
-		$aue_hide_username = '';
-		$aue_hide_name = '';
-		$aue_hide_email = '';
-		$aue_hide_website = '';
-		$aue_hide_posts = '';
-		$aue_hide_role = '';
-		
-		$show_wp_password = '';
-		$show_wp_password2 = '';
-		$show_wp_password_meter = '';
-		$show_wp_firstname = '';
-		$show_wp_secondname = '';
-		$show_wp_nickname = '';
-		$show_wp_website = '';
-		$show_wp_aim = '';
-		$show_wp_yahoo = '';
-		$show_wp_jgt = '';
-		$show_wp_bio_info = '';
 	}
 	
 	if ($wpdb->get_var("SHOW TABLES LIKE '$wpdb_wp_fields_table'") == $wpdb_wp_fields_table) {
@@ -560,7 +412,7 @@ function cimy_show_options($results, $embedded) {
 		</tr>
 		<tr>
 			<th scope="row">
-				<input type="checkbox" name="mail_include_fields" value="1"<?php echo $mail_include_fields; ?> />
+				<input type="checkbox" name="mail_include_fields" value="1"<?php checked(true, $options['mail_include_fields'], true); ?> />
 				<?php _e("Show all fields in the welcome email", $cimy_uef_domain); ?>
 			</th>
 			<td>
@@ -572,7 +424,7 @@ function cimy_show_options($results, $embedded) {
 <?php if (!is_multisite()) { ?>
 		<tr>
 			<th scope="row">
-				<input type="checkbox" name="confirm_email" value="1"<?php echo $confirm_email; ?> />
+				<input type="checkbox" name="confirm_email" value="1"<?php checked(true, $options['confirm_email'], true); ?> />
 				<?php _e("Enable email confirmation", $cimy_uef_domain); ?>
 			</th>
 			<td>
@@ -585,7 +437,27 @@ function cimy_show_options($results, $embedded) {
 		</tr>
 		<tr>
 			<th scope="row">
-				<input type="checkbox" name="redirect_to" value="source"<?php echo $redirect_to_source; ?> />
+				<input type="checkbox" name="confirm_form" value="1"<?php checked(true, $options['confirm_form'], true); ?> />
+				<?php _e("Enable form confirmation", $cimy_uef_domain); ?>
+			</th>
+			<td>
+			<?php
+				_e("a summary of the registration form will be presented to the user", $cimy_uef_domain);
+			?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<?php _e("Customize welcome email sent to the new user", $cimy_uef_domain); ?>
+			</th>
+			<td>
+				<textarea name="welcome_email" rows="6" cols="50"><?php echo esc_html($welcome_email); ?></textarea><br />
+				<?php _e("if you change or remove the placeholders then the email won't have the correct information", $cimy_uef_domain); ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<input type="checkbox" name="redirect_to" value="source"<?php checked("source", $options['redirect_to'], true); ?> />
 				<?php _e("Redirect to the source", $cimy_uef_domain); ?>
 			</th>
 			<td>
@@ -597,7 +469,7 @@ function cimy_show_options($results, $embedded) {
 <?php } ?>
 		<tr>
 			<th scope="row">
-				<input type="radio" name="captcha" value="none"<?php echo $no_captcha; ?> />
+				<input type="radio" name="captcha" value="none"<?php checked("none", $options['captcha'], true); ?> />
 				<?php _e('No captcha', $cimy_uef_domain); ?></a>
 			</th>
 			<td>
@@ -605,7 +477,7 @@ function cimy_show_options($results, $embedded) {
 		</tr>
 		<tr>
 			<th scope="row">
-				<input type="radio" name="captcha" value="recaptcha"<?php echo $recaptcha; ?> />
+				<input type="radio" name="captcha" value="recaptcha"<?php checked("recaptcha", $options['captcha'], true); ?> />
 				<?php _e('Enable <a href="http://www.google.com/recaptcha" target="_blank">reCAPTCHA</a>', $cimy_uef_domain); ?></a>
 			</th>
 			<td>
@@ -621,7 +493,7 @@ function cimy_show_options($results, $embedded) {
 		</tr>
 		<tr>
 			<th scope="row">
-				<input type="radio" name="captcha" value="securimage"<?php echo $securimage; ?> />
+				<input type="radio" name="captcha" value="securimage"<?php checked("securimage", $options['captcha'], true); ?> />
 				<?php _e('Enable <a href="http://www.phpcaptcha.org/" target="_blank">Securimage Captcha</a>', $cimy_uef_domain); ?></a>
 			</th>
 			<td>
@@ -674,7 +546,6 @@ function cimy_show_options($results, $embedded) {
 			<td>
 				<?php
 				if ($db_wp_fields >= 0) {
-					$dis_wp_fields = "";
 					?>
 					<select name="db_wp_fields">
 						<option value="none">- <?php _e("select action", $cimy_uef_domain); ?> -</option>
@@ -682,10 +553,8 @@ function cimy_show_options($results, $embedded) {
 						<option value="delete"><?php _e("Delete"); ?></option>
 					</select><?php
 				}
-				else {
-					$dis_wp_fields = ' disabled="disabled"';
+				else
 					echo "<strong>".__("NOT PRESENT", $cimy_uef_domain)."</strong>";
-				}
 				?>
 			</td>
 		</tr>
@@ -751,30 +620,30 @@ function cimy_show_options($results, $embedded) {
 	<table class="form-table">
 		<tr>
 			<th scope="row" width="40%">
-				<input type="checkbox" name="hide_username" value="1"<?php echo $aue_hide_username; ?> /> <?php _e("Hide username field", $cimy_uef_domain); ?>
+				<input type="checkbox" name="hide_username" value="1"<?php checked(true, in_array('username', $options['aue_hidden_fields']), true); ?> /> <?php _e("Hide username field", $cimy_uef_domain); ?>
 			</th>
 			<td width="60%"></td>
 		</tr>
 		<tr>
 			<th>
-				<input type="checkbox" name="hide_name" value="1"<?php echo $aue_hide_name; ?> /> <?php _e("Hide name field", $cimy_uef_domain); ?>
+				<input type="checkbox" name="hide_name" value="1"<?php checked(true, in_array('name', $options['aue_hidden_fields']), true); ?> /> <?php _e("Hide name field", $cimy_uef_domain); ?>
 			</th>
 			<td></td>
 		</tr>
 		<tr>
-			<th scope="row"><input type="checkbox" name="hide_email" value="1"<?php echo $aue_hide_email; ?> /> <?php _e("Hide email field", $cimy_uef_domain); ?></th>
+			<th scope="row"><input type="checkbox" name="hide_email" value="1"<?php checked(true, in_array('email', $options['aue_hidden_fields']), true); ?> /> <?php _e("Hide email field", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th scope="row"><input type="checkbox" name="hide_role" value="1"<?php echo $aue_hide_role; ?> /> <?php _e("Hide role field", $cimy_uef_domain); ?></th>
+			<th scope="row"><input type="checkbox" name="hide_role" value="1"<?php checked(true, in_array('role', $options['aue_hidden_fields']), true); ?> /> <?php _e("Hide role field", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th scope="row"><input type="checkbox" name="hide_website" value="1"<?php echo $aue_hide_website; ?> /> <?php _e("Hide website field", $cimy_uef_domain); ?></th>
+			<th scope="row"><input type="checkbox" name="hide_website" value="1"<?php checked(true, in_array('website', $options['aue_hidden_fields']), true); ?> /> <?php _e("Hide website field", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th><input type="checkbox" name="hide_posts" value="1"<?php echo $aue_hide_posts; ?> /> <?php _e("Hide n. posts field", $cimy_uef_domain); ?></th>
+			<th><input type="checkbox" name="hide_posts" value="1"<?php checked(true, in_array('posts', $options['aue_hidden_fields']), true); ?> /> <?php _e("Hide n. posts field", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 	</table>
@@ -782,47 +651,47 @@ function cimy_show_options($results, $embedded) {
 	<h3><?php _e("WordPress hidden fields", $cimy_uef_domain); ?></h3>
 	<table class="form-table">
 		<tr>
-			<th scope="row" width="40%"><input type="checkbox" name="show_wp_password" value="1"<?php echo $show_wp_password.$dis_wp_fields; ?> /> <?php _e("Show password", $cimy_uef_domain); ?></th>
+			<th scope="row" width="40%"><input type="checkbox" name="show_wp_password" value="1"<?php checked(true, in_array('password', $options['wp_hidden_fields']), true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show password", $cimy_uef_domain); ?></th>
 			<td width="60%"></td>
 		</tr>
 		<tr>
-			<th>&nbsp;&nbsp;&nbsp;<input type="checkbox" name="show_wp_password2" value="1"<?php echo $show_wp_password2.$dis_wp_fields; ?> /> <?php _e("Show confirmation password", $cimy_uef_domain); ?></th>
+			<th>&nbsp;&nbsp;&nbsp;<input type="checkbox" name="show_wp_password2" value="1"<?php checked(true, in_array('password2', $options['wp_hidden_fields']), true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show confirmation password", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th>&nbsp;&nbsp;&nbsp;<input type="checkbox" name="show_wp_password_meter" value="1"<?php echo $show_wp_password_meter.$dis_wp_fields; ?> /> <?php _e("Show password strength meter", $cimy_uef_domain); ?></th>
+			<th>&nbsp;&nbsp;&nbsp;<input type="checkbox" name="show_wp_password_meter" value="1"<?php checked(true, $options['password_meter'], true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show password strength meter", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th><input type="checkbox" name="show_wp_firstname" value="1"<?php echo $show_wp_firstname.$dis_wp_fields; ?> /> <?php _e("Show first name", $cimy_uef_domain); ?></th>
+			<th><input type="checkbox" name="show_wp_firstname" value="1"<?php checked(true, in_array('firstname', $options['wp_hidden_fields']), true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show first name", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th><input type="checkbox" name="show_wp_lastname" value="1"<?php echo $show_wp_lastname.$dis_wp_fields; ?> /> <?php _e("Show last name", $cimy_uef_domain); ?></th>
+			<th><input type="checkbox" name="show_wp_lastname" value="1"<?php checked(true, in_array('lastname', $options['wp_hidden_fields']), true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show last name", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th><input type="checkbox" name="show_wp_nickname" value="1"<?php echo $show_wp_nickname.$dis_wp_fields; ?> /> <?php _e("Show nickname", $cimy_uef_domain); ?></th>
+			<th><input type="checkbox" name="show_wp_nickname" value="1"<?php checked(true, in_array('nickname', $options['wp_hidden_fields']), true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show nickname", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th scope="row"><input type="checkbox" name="show_wp_website" value="1"<?php echo $show_wp_website.$dis_wp_fields; ?> /> <?php _e("Show website", $cimy_uef_domain); ?></th>
+			<th scope="row"><input type="checkbox" name="show_wp_website" value="1"<?php checked(true, in_array('website', $options['wp_hidden_fields']), true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show website", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th scope="row"><input type="checkbox" name="show_wp_aim" value="1"<?php echo $show_wp_aim.$dis_wp_fields; ?> /> <?php _e("Show AIM", $cimy_uef_domain); ?></th>
+			<th scope="row"><input type="checkbox" name="show_wp_aim" value="1"<?php checked(true, in_array('aim', $options['wp_hidden_fields']), true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show AIM", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th scope="row"><input type="checkbox" name="show_wp_yahoo" value="1"<?php echo $show_wp_yahoo.$dis_wp_fields; ?> /> <?php _e("Show Yahoo IM", $cimy_uef_domain); ?></th>
+			<th scope="row"><input type="checkbox" name="show_wp_yahoo" value="1"<?php checked(true, in_array('yahoo', $options['wp_hidden_fields']), true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show Yahoo IM", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th scope="row"><input type="checkbox" name="show_wp_jgt" value="1"<?php echo $show_wp_jgt.$dis_wp_fields; ?> /> <?php _e("Show Jabber / Google Talk", $cimy_uef_domain); ?></th>
+			<th scope="row"><input type="checkbox" name="show_wp_jgt" value="1"<?php checked(true, in_array('jgt', $options['wp_hidden_fields']), true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show Jabber / Google Talk", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 		<tr>
-			<th scope="row"><input type="checkbox" name="show_wp_bio-info" value="1"<?php echo $show_wp_bio_info.$dis_wp_fields; ?> /> <?php _e("Show Biographical Info", $cimy_uef_domain); ?></th>
+			<th scope="row"><input type="checkbox" name="show_wp_bio-info" value="1"<?php checked(true, in_array('bio-info', $options['wp_hidden_fields']), true); disabled(true, $db_wp_fields < 0, true); ?> /> <?php _e("Show Biographical Info", $cimy_uef_domain); ?></th>
 			<td></td>
 		</tr>
 	</table>

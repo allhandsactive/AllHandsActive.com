@@ -7,19 +7,19 @@ function wptouch_core_header_enqueue() {
 	$version = get_bloginfo('version'); 
 		if (!bnc_wptouch_is_exclusive()) { 
 	    wp_enqueue_script('jquery-form');
-		wp_enqueue_script('wptouch-core', '' . compat_get_plugin_url( 'wptouch' ) . '/themes/core/core.js', array('jquery'),'1.9.12' );		
+		wp_enqueue_script('wptouch-core', '' . compat_get_plugin_url( 'wptouch' ) . '/themes/core/core.js', array('jquery'), '1.9.22.1' );		
 		wp_head(); 
 
-		} elseif (bnc_wptouch_is_exclusive()) { 
-		echo "<script src='" . get_bloginfo('wpurl') . "/wp-includes/js/jquery/jquery.js' type='text/javascript' charset='utf-8'></script>\n";
-	   echo "<script src='" . get_bloginfo('wpurl') . "/wp-includes/js/jquery/jquery.form.js' type='text/javascript' charset='utf-8'></script>\n";
-		echo "<script src='" . compat_get_plugin_url( 'wptouch' ) . "/themes/core/core.js' type='text/javascript' charset='utf-8'></script>\n"; 
-		 }
+		} elseif ( bnc_wptouch_is_exclusive() ) { 
+			echo "<script src='" . get_bloginfo('wpurl') . "/wp-includes/js/jquery/jquery.js?wptouch' type='text/javascript' charset='utf-8'></script>\n";
+			echo "<script src='" . get_bloginfo('wpurl') . "/wp-includes/js/jquery/jquery.form.js?wptouch' type='text/javascript' charset='utf-8'></script>\n";
+			echo "<script src='" . compat_get_plugin_url( 'wptouch' ) . "/themes/core/core.js?wptouch' type='text/javascript' charset='utf-8'></script>\n"; 
+		}
 	}
   
 function wptouch_core_header_home() {
 	if (bnc_is_home_enabled()) {
-		echo sprintf(__( "%sHome%s", "wptouch" ), '<li><a href="' . get_bloginfo('home') . '"><img src="' . bnc_get_title_image() . '" alt=""/>','</a></li>');
+		echo sprintf(__( "%sHome%s", "wptouch" ), '<li><a href="' . get_bloginfo( 'url' ) . '"><img src="' . bnc_get_title_image() . '" alt=""/>','</a></li>');
 	}
 }
   
@@ -53,7 +53,7 @@ function wptouch_core_header_check_use() {
 		echo '<div class="content post">';
 		echo sprintf(__( "%sWarning%s", "wptouch" ), '<a href="#" class="h2">','</a>');
 		echo '<div class="mainentry">';
-		echo __( "Sorry, this theme is only meant for use with WordPress on certain smartphones.", "wptouch" );
+		echo __( "Sorry, this theme is only meant for use on touch smartphones.", "wptouch" );
 		echo '</div></div>';
 		echo '' .get_footer() . '';
 		echo '</body>';
@@ -71,7 +71,11 @@ return stristr($useragent,$browser);
 	}
 
 function wptouch_twitter_link() {
-	echo '<li><a href="javascript:(function(){var%20f=false,t=true,a=f,b=f,u=\'\',w=window,d=document,g=w.open(),p,linkArr=d.getElementsByTagName(\'link\');for(var%20i=0;i%3ClinkArr.length&&!a;i++){var%20l=linkArr[i];for(var%20x=0;x%3Cl.attributes.length;x++){if(l.attributes[x].nodeName.toLowerCase()==\'rel\'){p=l.attributes[x].nodeValue.split(\'%20\');for(y=0;y%3Cp.length;y++){if(p[y]==\'short_url\'||p[y]==\'shorturl\'||p[y]==\'shortlink\'){a=t;}}}if(l.attributes[x].nodeName.toLowerCase()==\'rev\'&&l.attributes[x].nodeValue==\'canonical\'){a=t;}if(a){u=l.href;}}}if(a){go(u);}else{var%20h=d.getElementsByTagName(\'head\')[0]||d.documentElement,s=d.createElement(\'script\');s.src=\'http://api.bit.ly/shorten?callback=bxtShCb&longUrl=\'+encodeURIComponent(window.location.href)+\'&version=2.0.1&login=amoebe&apiKey=R_60a24cf53d0d1913c5708ea73fa69684\';s.charSet=\'utf-8\';h.appendChild(s);}bxtShCb=function(data){var%20rs,r;for(r%20in%20data.results){rs=data.results[r];break;}go(rs[\'shortUrl\']);};function%20go(u){return%20g.document.location.href=(\'http://m.twitter.com/home/?status=\'+encodeURIComponent(document.title+\'%20\'+u));}})();" id="otweet"></a></li>';
+	echo '<li><a href="javascript:(function(){var%20f=false,t=true,a=f,b=f,u=\'\',w=window,d=document,g=w.open(),p,linkArr=d.getElementsByTagName(\'link\');for(var%20i=0;i%3ClinkArr.length&&!a;i++){var%20l=linkArr[i];for(var%20x=0;x%3Cl.attributes.length;x++){if(l.attributes[x].nodeName.toLowerCase()==\'rel\'){p=l.attributes[x].nodeValue.split(\'%20\');for(y=0;y%3Cp.length;y++){if(p[y]==\'short_url\'||p[y]==\'shorturl\'||p[y]==\'shortlink\'){a=t;}}}if(l.attributes[x].nodeName.toLowerCase()==\'rev\'&&l.attributes[x].nodeValue==\'canonical\'){a=t;}if(a){u=l.href;}}}if(a){go(u);}else{var%20h=d.getElementsByTagName(\'head\')[0]||d.documentElement,s=d.createElement(\'script\');s.src=\'http://api.bit.ly/shorten?callback=bxtShCb&longUrl=\'+encodeURIComponent(window.location.href)+\'&version=2.0.1&login=amoebe&apiKey=R_60a24cf53d0d1913c5708ea73fa69684\';s.charSet=\'utf-8\';h.appendChild(s);}bxtShCb=function(data){var%20rs,r;for(r%20in%20data.results){rs=data.results[r];break;}go(rs[\'shortUrl\']);};function%20go(u){return%20g.document.location.href=(\'http://mobile.twitter.com/home/?status=\'+encodeURIComponent(document.title+\'%20\'+u));}})();" id="otweet"></a></li>';
+}
+
+function wptouch_facebook_link() {
+	echo "<li><a href=\"javascript:var%20d=document,f='http://www.facebook.com/share',l=d.location,e=encodeURIComponent,p='.php?src=bm&v=4&i=1297484757&u='+e(l.href)+'&t='+e(d.title);1;try{if%20(!/^(.*\.)?facebook\.[^.]*$/.test(l.host))throw(0);share_internal_bookmarklet(p)}catch(z)%20{a=function()%20{if%20(!window.open(f+'r'+p,'sharer','toolbar=0,status=0,resizable=1,width=626,height=436'))l.href=f+p};if%20(/Firefox/.test(navigator.userAgent))setTimeout(a,0);else{a()}}void(0)\" id=\"facebook\"></a></li>";
 }
 
 function wptouch_thumb_reflections() {
@@ -88,22 +92,52 @@ function wptouch_tags_link() {
 function wptouch_cats_link() {
 		echo '<a href="#head-cats">' . __( "Categories", "wptouch" ) . '</a>';
 }
-
-function bnc_get_ordered_cat_list() {
-	// We created our own function for this as wp_list_categories doesn't make the count linkable
-
-	global $table_prefix;
+  
+function bnc_get_ordered_cat_list( $num ) {
 	global $wpdb;
 
-	$sql = "select * from " . $table_prefix . "term_taxonomy inner join " . $table_prefix . "terms on " . $table_prefix . "term_taxonomy.term_id = " . $table_prefix . "terms.term_id where taxonomy = 'category' and count > 0 order by count desc";	
-	$results = $wpdb->get_results( $sql );
-	foreach ($results as $result) {
-		echo "<li><a href=\"" . get_category_link( $result->term_id ) . "\">" . $result->name . " (" . $result->count . ")</a></li>";
+	if (  wptouch_excluded_cats() ) {
+		$excluded_cats = wptouch_excluded_cats();
+	} else {
+		$excluded_cats = 0;	
 	}
 
+	echo '<ul>';
+	$sql = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}term_taxonomy INNER JOIN {$wpdb->prefix}terms ON {$wpdb->prefix}term_taxonomy.term_id = {$wpdb->prefix}terms.term_id WHERE taxonomy = 'category' AND {$wpdb->prefix}term_taxonomy.term_id NOT IN ($excluded_cats) AND count >= 1 ORDER BY count DESC LIMIT 0, $num");
+
+	if ( $sql ) {
+		foreach ( $sql as $result ) {
+			if ( $result ) {
+				echo "<li><a href=\"" . get_category_link( $result->term_id ) . "\">" . $result->name . " <span>(" . $result->count . ")</span></a></li>";			
+			}
+		}
+	}
+	echo '</ul>';
 }
 
-  
+function wptouch_ordered_tag_list( $num ) {
+	global $wpdb;
+
+	if (  wptouch_excluded_tags() ) {
+		$excluded_tags =  wptouch_excluded_tags();
+	} else {
+		$excluded_tags = 0;	
+	}
+
+	echo '<ul>';
+		
+	$sql = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}term_taxonomy INNER JOIN {$wpdb->prefix}terms ON {$wpdb->prefix}term_taxonomy.term_id = {$wpdb->prefix}terms.term_id WHERE taxonomy = 'post_tag' AND {$wpdb->prefix}term_taxonomy.term_id NOT IN ($excluded_tags) AND count >= 1 ORDER BY count DESC LIMIT 0, $num");	
+
+	if ( $sql ) {
+		foreach ( $sql as $result ) {
+			if ( $result ) {
+				echo "<li><a href=\"" . get_tag_link( $result->term_id ) . "\">" . $result->name . " <span>(" . $result->count . ")</span></a></li>";			
+			}
+		}
+	}
+	echo '</ul>';
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WPtouch Core Body Functions
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
@@ -157,10 +191,8 @@ function wptouch_core_else_text() {
 }
 
 function wptouch_core_footer_switch_link() {	
-	$switch_url = $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
-
-echo '<script type="text/javascript">function switch_delayer() { window.location = "' . get_bloginfo('siteurl') . '/?theme_view=normal&wptouch_redirect=' . $switch_url . '"}</script>';
-echo '' . __( "Mobile Theme", "wptouch" ) . ' <a id="switch-link" onclick="wptouch_switch_confirmation();" href="javascript:return false;"></a>';
+	echo '<script type="text/javascript">function switch_delayer() { window.location = "' . get_bloginfo( 'url' ) . '/?wptouch_view=normal&wptouch_redirect_nonce=' . wp_create_nonce( 'wptouch_redirect' ) . '&wptouch_redirect=' . $_SERVER['REQUEST_URI'] .'"}</script>';
+	echo '' . __( "Mobile Theme", "wptouch" ) . ' <a id="switch-link" onclick="wptouch_switch_confirmation();" href="javascript:return false;"></a>';
 }
 
 
@@ -218,6 +250,21 @@ function wptouch_thumbnail_size( $size ) {
 	return $size;
 }
 
+function wptouch_idevice_classes() {
+	$iPhone = strstr( $_SERVER['HTTP_USER_AGENT'], 'iPhone' );
+	$iPod = strstr( $_SERVER['HTTP_USER_AGENT'], 'iPod' );
+//	$iPod = strstr( $_SERVER['HTTP_USER_AGENT'], 'Safari' );
+	if ( $iPhone || $iPod ) {
+		echo 'idevice';
+	}
+}
+
+// Remove the admin bar when logged in and looking at WPtouch
+if ( bnc_wptouch_is_mobile() && function_exists( 'show_admin_bar' ) ) {
+	add_filter( 'show_admin_bar', '__return_false' );
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WPtouch Filters
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,4 +284,3 @@ remove_filter('the_content', 'Add_Like_Button');
 //Sharebar Plugin
 remove_filter('the_content', 'sharebar_auto');
 remove_action('wp_head', 'sharebar_header');
-?>

@@ -8,11 +8,11 @@
   <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
  <div class="post" id="post-<?php the_ID(); ?>">
  
-			<?php if ( is_home() && is_sticky( $post_ID ) && $wptouch_settings['post-cal-thumb'] == 'nothing-shown' ) echo '<div class="sticky-icon-none"></div>'; ?>
-			<?php if ( is_home() && is_sticky( $post_ID ) && $wptouch_settings['post-cal-thumb'] != 'nothing-shown' ) echo '<div class="sticky-icon"></div>'; ?>
+			<?php if ( is_home() && is_sticky() && $wptouch_settings['post-cal-thumb'] == 'nothing-shown' ) echo '<div class="sticky-icon-none"></div>'; ?>
+			<?php if ( is_home() && is_sticky() && $wptouch_settings['post-cal-thumb'] != 'nothing-shown' ) echo '<div class="sticky-icon"></div>'; ?>
 
  		<?php if (!function_exists('dsq_comments_template') && !function_exists('id_comments_template')) { ?>
-				<?php if (wptouch_get_comment_count() && !is_archive() && !is_search()) { ?>
+				<?php if (wptouch_get_comment_count() && !is_archive() && !is_search() && bnc_can_show_comments() ) { ?>
 					<div class="<?php if ($wptouch_settings['post-cal-thumb'] == 'nothing-shown') { echo 'nothing-shown ';} ?>comment-bubble<?php if ( wptouch_get_comment_count() > 99 ) echo '-big'; ?>">
 						<?php comments_number('0','1','%'); ?>
 					</div>
@@ -24,10 +24,10 @@
 			<div class="archive-top-right">
 				<?php if (bnc_excerpt_enabled()) { ?>
 				<script type="text/javascript">
-					$wptouch(document).ready(function(){
-						$wptouch("a#arrow-<?php the_ID(); ?>").click(function(event) {
-							$wptouch(this).toggleClass("post-arrow-down");
-							$wptouch('#entry-<?php the_ID(); ?>').fadeToggle(500);
+					$wpt(document).ready(function(){
+						$wpt("a#arrow-<?php the_ID(); ?>").bind( touchStartOrClick, function(e) {
+							$wpt(this).toggleClass("post-arrow-down");
+							$wpt('#entry-<?php the_ID(); ?>').wptouchFadeToggle(500);
 						});	
 					 });					
 				</script>
@@ -41,10 +41,10 @@
  	<?php } else { ?>	
 				<?php if (bnc_excerpt_enabled()) { ?>
 				<script type="text/javascript">
-					$wptouch(document).ready(function(){
-						$wptouch("a#arrow-<?php the_ID(); ?>").click(function(event) {
-							$wptouch(this).toggleClass("post-arrow-down");
-							$wptouch('#entry-<?php the_ID(); ?>').fadeToggle(500);
+					$wpt(document).ready(function(){
+						$wpt("a#arrow-<?php the_ID(); ?>").bind( touchStartOrClick, function(e) {
+							$wpt(this).toggleClass("post-arrow-down");
+							$wpt('#entry-<?php the_ID(); ?>').wptouchFadeToggle(500);
 						});	
 					 });					
 				</script>
@@ -124,13 +124,13 @@
  
 	<a class="h2" href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
 		<div class="post-author">
-			<?php if ($wptouch_settings['post-cal-thumb'] != 'calendar-icons') { ?><span class="lead"><?php _e("Written on", "wptouch"); ?></span> <?php echo get_the_time('j') ?> <?php echo get_the_time('F') ?> <?php echo get_the_time('Y') ?> &agrave; <?php echo get_the_time('G:ia') ?><?php if (!bnc_show_author()) { echo '<br />';} ?><?php } ?>
+		<?php if ($wptouch_settings['post-cal-thumb'] != 'calendar-icons') { ?><span class="lead"><?php _e("Written on", "wptouch"); ?></span> <?php echo get_the_time('d.m.Y') ?> <?php _e("at", "wptouch"); ?> <?php echo get_the_time('G:i') ?><br /><?php if (!bnc_show_author()) { echo '<br />';} ?><?php } ?>
 			<?php if (bnc_show_author()) { ?><span class="lead"><?php _e("By", "wptouch"); ?></span> <?php the_author(); ?><br /><?php } ?>
 			<?php if (bnc_show_categories()) { echo('<span class="lead">' . __( 'Categories', 'wptouch' ) . ':</span> '); the_category(', '); echo('<br />'); } ?> 
 			<?php if (bnc_show_tags() && get_the_tags()) { the_tags('<span class="lead">' . __( 'Tags', 'wptouch' ) . ':</span> ', ', ', ''); } ?>
 		</div>	
 			<div class="clearer"></div>	
-            <div id="entry-<?php the_ID(); ?>" <?php  if (bnc_excerpt_enabled()) { ?>style="display:none"<?php } ?> class="mainentry <?php echo $wptouch_settings['style-text-size']; ?> <?php echo $wptouch_settings['style-text-justify']; ?>">
+            <div id="entry-<?php the_ID(); ?>" <?php  if (bnc_excerpt_enabled()) { ?>style="display:none"<?php } ?> class="mainentry <?php echo $wptouch_settings['style-text-justify']; ?>">
  				<?php the_excerpt(); ?>
  		    <a class="read-more" href="<?php the_permalink() ?>"><?php _e( "Read This Post", "wptouch" ); ?></a>
 	        </div>  
@@ -142,7 +142,7 @@
 
 	<div id="call<?php echo md5($_SERVER['REQUEST_URI']); ?>" class="ajax-load-more">
 		<div id="spinner<?php echo md5($_SERVER['REQUEST_URI']); ?>" class="spin"	 style="display:none"></div>
-		<a class="ajax" href="javascript:return false;" onclick="$wptouch('#spinner<?php echo md5($_SERVER['REQUEST_URI']); ?>').fadeIn(200); $wptouch('#ajaxentries<?php echo md5($_SERVER['REQUEST_URI']); ?>').load('<?php echo get_next_posts_page_link(); ?>', {}, function(){ $wptouch('#call<?php echo md5($_SERVER['REQUEST_URI']); ?>').fadeOut();});">
+		<a class="ajax" href="javascript:return false;" onclick="$wpt('#spinner<?php echo md5($_SERVER['REQUEST_URI']); ?>').fadeIn(200); $wpt('#ajaxentries<?php echo md5($_SERVER['REQUEST_URI']); ?>').load('<?php echo get_next_posts_page_link(); ?>', {}, function(){ $wpt('#call<?php echo md5($_SERVER['REQUEST_URI']); ?>').fadeOut();});">
 			<?php _e( "Load more entries...", "wptouch" ); ?>
 		</a>
 	</div>
