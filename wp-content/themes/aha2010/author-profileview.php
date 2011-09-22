@@ -13,7 +13,7 @@ $authorData = get_userdata(intval($author));
 $showEmail = get_cimyFieldValue($author, 'EMAIL_PROFILE', 'YES');
 $skillArr = getSkillFields();
 
-echo get_avatar($authorData->user_email);
+echo get_avatar($authorData->user_email, apply_filters('aha2010_author_bio_avatar_size', 150));
 ?>
 <h2>
 <?php

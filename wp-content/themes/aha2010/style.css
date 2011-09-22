@@ -1322,3 +1322,26 @@ code {
 		border: none;
 	}
 }
+
+/* Styles for the Makers page */
+.all-makers-table-cell {
+     padding: 0px ! important;
+}
+
+.all-makers-table * {
+     border: medium none ! important;
+}
+
+.all-makers-table {
+     border: medium none ! important;
+}
+
+.maker-table-avatar, .maker-table-username {
+     text-align: center;
+}
+
+.maker-table-username a {
+     color: #888888 ! important;
+     font-weight: bold;
+     text-decoration: none;
+}

@@ -36,7 +36,7 @@ else:
   $authorData = get_userdata($author);
 ?>
 <?php echo get_avatar($authorData->user_email, apply_filters('aha2010_author_bio_avatar_size', 60)); ?>
-<h1 class="page-title author"><?php printf( __( 'History for %s', 'aha2010' ), "<span class='vcard'><a class='url fn n' href='" . get_author_posts_url($authorData->ID) . "' title='" . esc_attr($authorData->display_name) . "' rel='me'>" . $authorData->display_name . "</a></span>" ); ?></h1>
+<h1 class="page-title author"><?php printf( __( 'History for %s', 'aha2010' ), "<span class='vcard'><a class='url fn n' href='" . get_author_posts_url($authorData->ID) . "?profileview' title='" . esc_attr($authorData->display_name) . "' rel='me'>" . $authorData->display_name . "</a></span>" ); ?></h1>
 <?php
 	/* Run the loop for the author archive page to output the authors posts
 	 * If you want to overload this in a child theme then include a file

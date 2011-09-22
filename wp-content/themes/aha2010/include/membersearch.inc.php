@@ -1,4 +1,5 @@
 <?php
+//TODO: It would be a good idea to make this more View-like (i.e. of MVC) by putting out data in a more templateable fashion.
 /** CONFIGURATION **/
 //Defines which fieldset which we will use to populate the list of skills.
 //This will need to be updated if the fieldset index ever changes.
@@ -78,6 +79,10 @@ function getSearchResults()
     {
       foreach($result as $userData)
       {
+        //Skip over private profiles.
+        if(get_cimyFieldValue($userData['user_id'], 'PRIVATE_PROFILE', 'YES')) {
+          continue;
+        }
         /*
         $userArr will be a 2d array with user ID in the first dimension.
         The second dimension is an associative array with skillname => true if they have selected the skill.
@@ -103,7 +108,9 @@ function getSearchResults()
       $output .= '<tr>';
       //Let's get some data on this user.
       $wpUserData = get_userdata($userId);
-      $output .= '<td>' . $wpUserData->user_nicename . '</td>';
+      $profileLink = '<a href="' . get_author_posts_url($userId) . '?profileview" target="_new" />';
+      
+      $output .= '<td>' . $profileLink . $wpUserData->user_nicename . '</a></td>';
       foreach($selSkills as $name) {
         $output .= '<td><input type="checkbox" ' . ($userSkills[$name] ? 'checked="checked"' : '') . ' disabled="disabled" /></td>';
       }
