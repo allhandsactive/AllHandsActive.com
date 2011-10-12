@@ -1,5 +1,16 @@
 <?php
 
+/* Add some new fields for contact information in the user profile. */
+function new_contactmethods( $contactmethods ) {
+  $contactmethods['irc'] = 'IRC';
+  $contactmethods['twitter'] = 'Twitter';
+  $contactmethods['facebook'] = 'Facebook';
+
+  return $contactmethods;
+}
+
+add_filter('user_contactmethods', 'new_contactmethods');
+
 function field_func($atts) {
    global $post;
    $name = $atts['name'];

@@ -28,6 +28,9 @@ echo get_avatar($authorData->user_email, apply_filters('aha2010_author_bio_avata
 <?php if($authorData->aim) { printf(__('<strong>AIM:</strong> %s', 'aha2010'), $authorData->aim . '<br />'); } ?>
 <?php if($authorData->yim) { printf(__('<strong>YIM:</strong> %s', 'aha2010'), $authorData->yim . '<br />'); } ?>
 <?php if($authorData->jabber) { printf(__('<strong>XMPP:</strong> %s', 'aha2010'), $authorData->jabber . '<br />'); } ?>
+<?php if($authorData->irc) { printf(__('<strong>IRC:</strong> %s', 'aha2010'), $authorData->irc . '<br />'); } ?>
+<?php if($authorData->twitter) { printf(__('<strong>Twitter:</strong> %s', 'aha2010'), $authorData->twitter . '<br />'); } ?>
+<?php if($authorData->facebook) { printf(__('<strong>Facebook:</strong> %s', 'aha2010'), $authorData->facebook . '<br />'); } ?>
 <?php if($authorData->description) { echo '<br />' . $authorData->description; } ?>
 <?php
   $hasSkills = '';
