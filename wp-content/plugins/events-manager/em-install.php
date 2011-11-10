@@ -307,6 +307,7 @@ function em_add_options() {
 	$respondent_email_pending_body_localizable = __("Dear #_BOOKINGNAME, <br/>You have requested #_BOOKINGSPACES space/spaces for #_NAME.<br/>Your booking is currently pending approval by our administrators. Once approved you will receive an automatic confirmation.<br/>Yours faithfully,<br/>#_CONTACTNAME",'dbem').__('<br/><br/>-------------------------------<br/>Powered by Events Manager - http://wp-events-plugin.com','dbem');
 	$respondent_email_rejected_body_localizable = __("Dear #_BOOKINGNAME, <br/>Your requested booking for #_BOOKINGSPACES spaces at #_NAME on #F #j, #Y has been rejected.<br/>Yours faithfully,<br/>#_CONTACTNAME",'dbem').__('<br/><br/>-------------------------------<br/>Powered by Events Manager - http://wp-events-plugin.com','dbem');
 	$respondent_email_cancelled_body_localizable = __("Dear #_BOOKINGNAME, <br/>Your requested booking for #_BOOKINGSPACES spaces at #_NAME on #F #j, #Y has been cancelled.<br/>Yours faithfully,<br/>#_CONTACTNAME",'dbem').__('<br/><br/>-------------------------------<br/>Powered by Events Manager - http://wp-events-plugin.com','dbem');
+	$event_approved_email_body = __("Dear #_CONTACTNAME, <br/>Your event #_NAME on #F #j, #Y has been approved.<br/>You can view your event here: #_EVENTURL",'dbem').__('<br/><br/>-------------------------------<br/>Powered by Events Manager - http://wp-events-plugin.com','dbem');
 	
 	$dbem_options = array(
 		//defaults
@@ -321,6 +322,9 @@ function em_add_options() {
 		'dbem_events_anonymous_submissions' => 0,
 		'dbem_events_anonymous_user' => 0,
 		'dbem_events_anonymous_result_success' => 'You have successfully submitted your event, which will be published pending approval.',
+		//Event Emails
+		'dbem_event_approved_email_subject' => __("Event Approved",'dbem'). " - #_NAME" ,
+		'dbem_event_approved_email_body' => str_replace("<br/>", "\n\r", $event_approved_email_body),		
 		//Event Formatting
 		'dbem_events_page_title' => __('Events','dbem'),
 		'dbem_events_page_scope' => 'future',
@@ -393,7 +397,7 @@ function em_add_options() {
 		'dbem_location_event_list_item_format' => "<li>#_EVENTLINK - #j #M #Y - #H:#i</li>",
 		//Category Formatting
 		'dbem_category_page_title_format' => '#_CATEGORYNAME',
-		'dbem_category_page_format' => '<p>#_CATEGORYNAME</p>#_CATEGORYNOTES<div><h3>Upcoming Events</h3>#_CATEGORYNEXTEVENTS',
+		'dbem_category_page_format' => '<p>#_CATEGORYNAME</p>#_CATEGORYNOTES<h3>Upcoming Events</h3>#_CATEGORYNEXTEVENTS',
 		'dbem_categories_page_title' => __('Event','dbem')." ".__('Categories','dbem'),
 		'dbem_categories_list_item_format' => '<li>#_CATEGORYLINK</li>',
 		'dbem_no_categories_message' =>  sprintf(__( 'No %s', 'dbem' ),__('Categories','dbem')),
@@ -419,6 +423,7 @@ function em_add_options() {
 		'dbem_email_disable_registration' => 0,
 		'dbem_rsvp_mail_port' => 465,
 		'dbem_smtp_host' => 'localhost',
+		'dbem_smtp_html' => 0,
 		'dbem_mail_sender_name' => '',
 		'dbem_rsvp_mail_send_method' => 'mail',
 		'dbem_rsvp_mail_SMTPAuth' => 1,
@@ -444,12 +449,17 @@ function em_add_options() {
 		'dbem_title_html' => '<h2>#_PAGETITLE</h2>',
 		//Bookings
 		'dbem_bookings_form_max' => 20,
+		'dbem_bookings_registration_disable' => 0,
+		'dbem_bookings_registration_user' => '',
 		'dbem_bookings_anonymous' => 1, 
 		'dbem_bookings_approval' => 1, //approval is on by default
 		'dbem_bookings_approval_reserved' => 0, //overbooking before approval?
 		'dbem_bookings_login_form' => 1, //show login form on booking area
 		'dbem_bookings_approval_overbooking' => 0, //overbooking possible when approving?
 		'dbem_bookings_double'=>0,//double bookings or more, users can't double book by default
+		'dbem_bookings_user_cancellation' => 1, //can users cancel their booking?
+		'dbem_bookings_tax' => 0, //extra tax
+		'dbem_bookings_tax_auto_add' => 0, //adjust prices to show tax?
 			//messages
 			'dbem_booking_feedback_pending' =>__('Booking successful, pending confirmation (you will also receive an email once confirmed).', 'dbem'),
 			'dbem_booking_feedback' => __('Booking successful.', 'dbem'),
@@ -482,6 +492,7 @@ function em_add_options() {
 			'dbem_bookings_page' => '<p>Date/Time - #j #M #Y #_12HSTARTTIME #@_{ \u\n\t\i\l j M Y}<br />Where - #_LOCATIONLINK</p>#_EXCERPT #_BOOKINGFORM<p>'.__('Powered by','dbem').'<a href="http://wp-events-plugin.com">events manager</a></p>',
 			'dbem_bookings_page_title' => __('Bookings - #_NAME','dbem'),
 			//Ticket Specific Options
+			'dbem_bookings_tickets_orderby' => 'ticket_price DESC, ticket_name ASC',
 			'dbem_bookings_tickets_priority' => 0,
 			'dbem_bookings_tickets_show_unavailable' => 0,
 			'dbem_bookings_tickets_show_loggedout' => 1,
@@ -506,6 +517,11 @@ function em_add_options() {
 		update_option('dbem_ical_limit',0); //fix, would rather do this than change the option name.
 		update_option('dbem_category_no_events_message',get_option('dbem_location_no_events_message'));
 		update_option('dbem_category_event_list_item_format',get_option('dbem_location_event_list_item_format'));
+	}
+	if( get_option('dbem_version') < 4.18 ){
+		if( get_option('dbem_category_page_format') == '<p>#_CATEGORYNAME</p>#_CATEGORYNOTES<div><h3>Upcoming Events</h3>#_CATEGORYNEXTEVENTS' ){
+			update_option('dbem_category_page_format',$dbem_options['dbem_category_page_format']);
+		}
 	}
 }    
 

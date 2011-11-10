@@ -185,11 +185,11 @@ class EM_Event extends EM_Object{
 			
 			//Add Owner as Contact Person
 			if($this->owner && $this->owner > 0){
-				$this->contact = get_userdata($this->owner);
+				$this->contact = new EM_Person($this->owner);
 			}
 			if( !is_object($this->contact) ){
 				$this->owner = get_option('dbem_default_contact_person');
-				$this->contact = get_userdata($this->owner);
+				$this->contact = new EM_Person($this->owner);
 			}
 			if( is_object($this->contact) ){
 	      		$this->contact->phone = get_metadata('user', $this->contact->ID, 'dbem_phone', true);
@@ -314,8 +314,7 @@ class EM_Event extends EM_Object{
 			$this->location->description = ''; //otherwise we get the same event details in the location  
 		}
 		if( !empty($_REQUEST['event_rsvp']) && $_REQUEST['event_rsvp'] && !$this->get_bookings()->get_tickets()->get_post() ){
-			$EM_Tickets = $this->get_bookings()->get_tickets();
-			array_merge($this->errors, $this->get_bookings()->get_tickets()->errors);
+			$this->add_error($this->get_bookings()->get_tickets()->get_errors());
 		}
 		return apply_filters('em_event_get_post', $this->validate(), $this);
 	}
@@ -515,7 +514,19 @@ class EM_Event extends EM_Object{
 	 * @return bool
 	 */
 	function approve(){
-		return $this->set_status(1);
+		$approval = $this->set_status(1);
+		if($approval){
+			//email
+			if( $this->owner == "" ) return $approval;	
+			$subject = $this->output(get_option('dbem_event_approved_email_subject'), 'email'); 
+			$body = $this->output(get_option('dbem_event_approved_email_body'), 'email');
+						
+			//Send to the person booking
+			if( !$this->email_send( $subject, $body, $this->contact->user_email) ){
+				return $approval;
+			}
+		}
+		return $approval;
 	}
 	
 	/**
@@ -551,6 +562,14 @@ class EM_Event extends EM_Object{
 			unset($eventArray['event_id']);
 			$EM_Event = new EM_Event( $eventArray );
 			if( $EM_Event->save() ){
+				//duplicate tickets
+				$EM_Tickets = $this->get_bookings()->get_tickets();
+				foreach($EM_Tickets->tickets as $EM_Ticket){
+					$EM_Ticket->id = '';
+					$EM_Ticket->event_id = $EM_Event->id;
+					$EM_Ticket->save();
+				}
+				$EM_Event->get_bookings(true);
 				$EM_Event->feedback_message = sprintf(__("%s successfully duplicated.", 'dbem'), __('Event','dbem'));
 				return apply_filters('em_event_duplicate', $EM_Event, $this);
 			}
@@ -697,9 +716,43 @@ class EM_Event extends EM_Object{
 	 * @param string $target
 	 * @return string
 	 */	
-	function output($format, $target="html") {
+	function output($format, $target="html") {	
+	 	$event_string = $format;
+		//Time place holder that doesn't show if empty.
+		//TODO add filter here too
+		preg_match_all('/#@?_\{[A-Za-z0-9 -\/,\.\\\]+\}/', $format, $results);
+		foreach($results[0] as $result) {
+			if(substr($result, 0, 3 ) == "#@_"){
+				$date = 'end_date';
+				$offset = 4;
+			}else{
+				$date = 'start_date';
+				$offset = 3;
+			}
+			if( $date == 'end_date' && $this->end_date == $this->start_date ){
+				$replace = __( apply_filters('em_event_output_placeholder', '', $this, $result, $target) );
+			}else{
+				$replace = __( apply_filters('em_event_output_placeholder', mysql2date(substr($result, $offset, (strlen($result)-($offset+1)) ), $this->$date), $this, $result, $target) );
+			}
+			$event_string = str_replace($result,$replace,$event_string );
+		}
+		//This is for the custom attributes
+		preg_match_all('/#_ATT\{([^}]+)\}(\{([^}]+)\})?/', $format, $results);
+		foreach($results[0] as $resultKey => $result) {
+			//Strip string of placeholder and just leave the reference
+			$attRef = substr( substr($result, 0, strpos($result, '}')), 6 );
+			$attString = '';
+			if( is_array($this->attributes) && array_key_exists($attRef, $this->attributes) ){
+				$attString = $this->attributes[$attRef];
+			}elseif( !empty($results[3][$resultKey]) ){
+				//Check to see if we have a second set of braces;
+				$attString = $results[3][$resultKey];
+			}
+			$attString = apply_filters('em_event_output_placeholder', $attString, $this, $result, $target);
+			$event_string = str_replace($result, $attString ,$event_string );
+		}
 	 	//First let's do some conditional placeholder removals
-		preg_match_all('/\{([a-zA-Z0-9_]+)\}([^{]+)\{\/[a-zA-Z0-9_]+\}/', $format, $conditionals);
+		preg_match_all('/\{([a-zA-Z0-9_]+)\}([^{]+)\{\/\1\}/', $event_string, $conditionals);
 		if( count($conditionals[0]) > 0 ){
 			//Check if the language we want exists, if not we take the first language there
 			foreach($conditionals[1] as $key => $condition){
@@ -721,10 +774,9 @@ class EM_Event extends EM_Object{
 					}
 					str_replace($conditionals[0][$key], $replacement, $format);
 				}
-				$format = str_replace($conditionals[0][$key], apply_filters('em_event_output_condition', $replacement, $condition, $conditionals[0][$key], $this), $format);
+				$event_string = str_replace($conditionals[0][$key], apply_filters('em_event_output_condition', $replacement, $condition, $conditionals[0][$key], $this), $event_string);
 			}
 		}
-	 	$event_string = $format;
 		//Now let's check out the placeholders.
 	 	preg_match_all("/(#@?_?[A-Za-z0-9]+)({([a-zA-Z0-9,]+)})?/", $format, $placeholders);
 		foreach($placeholders[1] as $key => $result) {
@@ -816,6 +868,25 @@ class EM_Event extends EM_Object{
 					if( get_option('dbem_rsvp_enabled')){
 						ob_start();
 						$template = em_locate_template('placeholders/bookingform.php', true, array('EM_Event'=>$this));
+						if( !defined('EM_BOOKING_JS_LOADED') ){
+							//this kicks off the Javascript required by booking forms. This is fired once for all booking forms on a page load and appears at the bottom of the page
+							//your theme must call the wp_footer() function for this to work (as required by many other plugins too) 
+							function em_booking_js_footer(){
+								?>		
+								<script type="text/javascript">
+									jQuery(document).ready( function($){	
+										<?php
+											//we call the segmented JS files and include them here
+											include(WP_PLUGIN_DIR.'/events-manager/includes/js/bookingsform.js'); 
+											do_action('em_gateway_js'); 
+										?>							
+									});
+								</script>
+								<?php
+							}
+							add_action('wp_footer','em_booking_js_footer');
+							define('EM_BOOKING_JS_LOADED',true);
+						}
 						$replace = ob_get_clean();
 					}
 					break;
@@ -855,11 +926,13 @@ class EM_Event extends EM_Object{
 					break;
 				case '#_BOOKINGSURL':
 				case '#_BOOKINGSLINK':
-					$bookings_link = esc_url(get_bloginfo ( 'wpurl' )."/wp-admin/admin.php?page=events-manager-bookings&amp;event_id=".$this->id);
-					if($result == '#_BOOKINGSLINK'){
-						$replace = '<a href="'.$bookings_link.'" title="'.esc_attr($bookings_link).'">'.esc_html($this->name).'</a>';
-					}else{
-						$replace = $bookings_link;	
+					if( $this->can_manage('manage_bookings','manage_others_bookings') ){
+						$bookings_link = esc_url(get_bloginfo ( 'wpurl' )."/wp-admin/admin.php?page=events-manager-bookings&amp;event_id=".$this->id);
+						if($result == '#_BOOKINGSLINK'){
+							$replace = '<a href="'.$bookings_link.'" title="'.esc_attr($bookings_link).'">'.esc_html($this->name).'</a>';
+						}else{
+							$replace = $bookings_link;	
+						}
 					}
 					break;
 				//Contact Person
@@ -933,40 +1006,6 @@ class EM_Event extends EM_Object{
 				$event_string = str_replace($result, $replace, $event_string ); 
 		 	}
 		}
-		//Time place holder that doesn't show if empty.
-		//TODO add filter here too
-		preg_match_all('/#@?_\{[A-Za-z0-9 -\/,\.\\\]+\}/', $format, $results);
-		foreach($results[0] as $result) {
-			if(substr($result, 0, 3 ) == "#@_"){
-				$date = 'end_date';
-				$offset = 4;
-			}else{
-				$date = 'start_date';
-				$offset = 3;
-			}
-			if( $date == 'end_date' && $this->end_date == $this->start_date ){
-				$replace = __( apply_filters('em_event_output_placeholder', '', $this, $result, $target) );
-			}else{
-				$replace = __( apply_filters('em_event_output_placeholder', mysql2date(substr($result, $offset, (strlen($result)-($offset+1)) ), $this->$date), $this, $result, $target) );
-			}
-			$event_string = str_replace($result,$replace,$event_string );
-		}
-		//This is for the custom attributes
-		preg_match_all('/#_ATT\{([^}]+)\}(\{([^}]+)\})?/', $format, $results);
-		foreach($results[0] as $resultKey => $result) {
-			//Strip string of placeholder and just leave the reference
-			$attRef = substr( substr($result, 0, strpos($result, '}')), 6 );
-			$attString = '';
-			if( is_array($this->attributes) && array_key_exists($attRef, $this->attributes) ){
-				$attString = $this->attributes[$attRef];
-			}elseif( !empty($results[3][$resultKey]) ){
-				//Check to see if we have a second set of braces;
-				$attString = $results[3][$resultKey];
-			}
-			$attString = apply_filters('em_event_output_placeholder', $attString, $this, $result, $target);
-			$event_string = str_replace($result, $attString ,$event_string );
-		}
-		
 		//Now do dependent objects
 		$event_string = $this->location->output($event_string, $target);
 		
@@ -998,6 +1037,7 @@ class EM_Event extends EM_Object{
 			//Make template event (and we just change dates)
 			$event = $this->to_array();
 			unset($event['event_id']); //remove id and we have a event template to feed to wpdb insert
+			$event['event_date_created'] = current_time('mysql'); //since the recurrences are recreated
 			unset($event['event_date_modified']);		
 			$event['event_attributes'] = serialize($event['event_attributes']);
 			foreach($event as $key => $value ){ //remove recurrence information

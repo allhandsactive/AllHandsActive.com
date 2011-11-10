@@ -206,7 +206,9 @@ jQuery(document).ready( function($){
 		$("#em-date-end-loc").datepicker(datepicker_vals);
 		
 		//localize start/end dates
+		var load_ui_css = false;
 		if( $('#em-date-start').val() != '' ){
+			load_ui_css = true;
 			if( EM.locale != 'en' && $.datepicker.regional[EM.locale] != null ){
 				var date_dateFormat = $.datepicker.regional[EM.locale].dateFormat;
 			}else{
@@ -224,15 +226,23 @@ jQuery(document).ready( function($){
 			el = $(el);
 			start = el.find('.start-loc');
 			if(start.length > 0){
+				load_ui_css = true;
 				datepicker_vals.altField = el.find('.start').first();
 				start.first().datepicker(datepicker_vals);
 			}
 			end = el.find('.end-loc');
 			if(end.length > 0){
+				load_ui_css = true;
 				datepicker_vals.altField = el.find('.end').first();
 				end.first().datepicker(datepicker_vals);
 			}
 		});
+		if( load_ui_css || $("#em-date-start-loc, #em-date-end-loc").length > 0 ){
+			var script = document.createElement("link");
+			script.rel = "stylesheet";
+			script.href = EM.ui_css;
+			document.body.appendChild(script);
+		}
 	}
 	
 	//previously in em-admin.php
@@ -479,7 +489,7 @@ function em_maps() {
 		
 		//JS Hook for handling map after instantiation
 		//Example hook, which you can add elsewhere in your theme's JS - jQuery(document).bind('em_maps_location_hook', function(){ alert('hi');} );
-		jQuery(document).trigger('em_maps_location_hook', [maps[map_id], infowindow, marker]);
+		jQuery(document).triggerHandler('em_maps_location_hook', [maps[map_id], infowindow, marker]);
 	});
 	jQuery('.em-locations-map').each( function(index){
 		var el = jQuery(this);
@@ -522,7 +532,7 @@ function em_maps() {
 				  var bounds = new google.maps.LatLngBounds(minLatLng,maxLatLng);
 				  maps[map_id].fitBounds(bounds);
 				//Call a hook if exists
-				jQuery(document).trigger('em_maps_locations_hook', [maps[map_id]]);
+				jQuery(document).triggerHandler('em_maps_locations_hook', [maps[map_id]]);
 			}else{
 				el.children().first().html('No locations found');
 			}

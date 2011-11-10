@@ -1,26 +1,95 @@
-=== Sociable ===
-Contributors: sociable
-Tags: social, bookmark, bookmarks, bookmarking, social bookmarking, social bookmarks, blogplay
+﻿=== Sociable ===
+Author: sociable
+Tags: sociable, social bookmarking, social bookmarks, social icons,  bookmarking, share, sharing, be sociable share, share and enjoy, digg, delicious, twitter, facebook, blinklist, stumbleupon, gmail, posterous, tumblr
+Requires Wordpress at least version: 2.8
+Tested up to version: 3.2.1
 Requires at least: 2.6
+
 Tested up to: 2.8.5
-Stable tag: 3.5.2
-
-Automatically add links on your posts, pages and RSS feed to your favorite social bookmarking sites. 
-
+Stable tag: 4.0.6
 == Description ==
-Automatically add links to your favorite social bookmarking sites on your posts, pages and in your RSS feed. You can choose from 99 different social bookmarking sites! WordPress 2.6 or above is required, if you use an older version, please download [this version](http://downloads.wordpress.org/plugin/sociable.3.0.6.zip), please keep in mind that version is not maintained.
+Sociable continues being the leader in the sharing space of WordPress plugins. Started more than 2 years ago, and with over 1,2mm downloads now, here comes the version 4.0, with everything you expect to get, and then some. 
 
-More info:
+As you can see, we've improved our visual interface, the default icons are now much more appealing, and a touch bit larger (you do want your readers to share your posts, don't you? :)
 
-* More info on [Sociable](http://www.blogplay.com/plugin), with info on how to add sites to it, and how to integrate it into your WordPress in other ways.
-+ For an update log follow [@blogplaycom](http://www.twitter.com/blogplaycom)
+[vimeo http://vimeo.com/31023294]
+
+
+[vimeo http://vimeo.com/31023684]
+
+
+Have technical support issues? Please leave them in the forum: http://wordpress.org/tags/sociable?forum_id=10 
+Also use the forum for ideas, feedback, suggestions. We'll try to check the forum every day.
+
+What happened to the old icons? You can still use them in the new version, but they're not the default style anymore.
+
+Sociable finds its home outside of the WordPress environment on Blogplay.com- 
+
+*** Sociable 4.0.6 *** 
+
+= Recent Updates = 
+* Changed the old motto "share and enjoy" for "Be Sociable, Share" much more attractive. Of cours you can customize it to whatever you want.
+* Complete re-write to increase efficiency and speed of the plugin
+
+= Recently Added Sites =
+* Posterous
+* Sphinn
+* Tumblr
+
+= Recently Deleted Sites =
+* Mixx.com, recently acquired, doesn't support share functions anymore
+* Netvibes stopped sharing
+* Slashdot: New bookmark creation is no longer supported 
+* And we deleted a bunch of others that were really not used that much
+
+= Special Thanks =
+Sociable plugin wouldn't be what it is today if it weren't for these people that helped us along the way:
+* Thanks to [WPzoom](http://http://www.wpzoom.com/wpzoom/500-free-icons-wpzoom-social-networking-icon-set/) for letting us to use their awesome icons
+* Also special thanks to [Webtreats etc](http://http://webtreats.mysitemyway.com/) for allowing us to use their great icons
 
 == Screenshots ==
-
 1. The Sociable backend, easily select sites and drag & drop to change the order of appearance.
-2. Sociable with its default styling.
+2. Sociable with its new default styling.
+3. Pick the style you want
+4. Or you can pick your own style
+
+== Installation ==
+1. Upload the extracted archive to `wp-content/plugins/`
+2. Activate the plugin through the 'Plugins' menu
+3. Open the plugin settings page Settings -> Sociable
+4. Adjust settings to your liking
+4. Enjoy!
+
+
+
+
+
+== Frequently Asked Questions ==
+= What happened to the old icons? =
+You can still use them. It's just they're not the default anymore.
+
+= I want to reach you, but not for a technical question =
+Please send us an email to  sociableblogplay [ at ] gmail.com
 
 == Changelog ==
+
+= 4.0.6 =
+* FIXED: Allow Sub Directory Blogs (http://domain.com/blog)
+
+= 4.0.5 =
+* FIXED: Other Upgrade issues
+
+= 4.0.4 =
+* FIXED: Upgrade issues
+
+
+= 4.0.3 =
+* Fix IIS 6.0 and PHP 5.3.x
+
+= 4.0.1 =
+* Changed the old motto "share and enjoy" for "Be Sociable, Share" much more attractive. Of cours you can customize it to whatever you want.
+* Complete re-write to increase efficiency and speed of the plugin
+* Updated it for up to Wordpress version 3.2.1
 
 = 3.5.2 = 
 * Added new services MOB, 豆瓣, 豆瓣九点, QQ书签, LaTafanera, SheToldMe, viadeo FR, Diggita, Design Float

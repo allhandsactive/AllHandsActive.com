@@ -27,15 +27,30 @@ class EM_Person extends WP_User{
 		do_action('em_person',$this, $person_id, $username);
 	}
 	
-	function get_bookings(){
+	function get_bookings($ids_only = false){
 		global $wpdb;
+		if( is_multisite() ){
+			if( !is_main_site() ){
+				//not the main blog, force single blog search
+				$blog_condition = "AND e.blog_id=".get_current_blog_id();
+			}elseif(is_main_site() && !get_option('dbem_ms_global_events')){
+				$blog_condition = "AND (e.blog_id=".get_current_blog_id().' OR e.blog_id IS NULL)';
+			}
+		}		
 		$EM_Booking = new EM_Booking(); //empty booking for fields
-		$results = $wpdb->get_results("SELECT b.".implode(', b.', array_keys($EM_Booking->fields))." FROM ".EM_BOOKINGS_TABLE." b, ".EM_EVENTS_TABLE." e WHERE e.event_id=b.event_id AND person_id={$this->id} ORDER BY event_start_date DESC",ARRAY_A);
+		$results = $wpdb->get_results("SELECT b.".implode(', b.', array_keys($EM_Booking->fields))." FROM ".EM_BOOKINGS_TABLE." b, ".EM_EVENTS_TABLE." e WHERE e.event_id=b.event_id AND person_id={$this->id} {$blog_condition} ORDER BY event_start_date DESC",ARRAY_A);
 		$bookings = array();
-		foreach($results as $booking_data){
-			$bookings[] = new EM_Booking($booking_data);
+		if($ids_only){
+			foreach($results as $booking_data){
+				$bookings[] = $booking_data['booking_id'];
+			}
+			return $bookings;
+		}else{
+			foreach($results as $booking_data){
+				$bookings[] = new EM_Booking($booking_data);
+			}
+			return new EM_Bookings($bookings);
 		}
-		return new EM_Bookings($bookings);
 	}
 
 	/**
@@ -68,7 +83,7 @@ class EM_Person extends WP_User{
 	}
 	
 	function get_name(){
-		$full_name = $this->first_name . " " . $this->last_name;
+		$full_name = $this->user_firstname  . " " . $this->user_lastname ;
 		$full_name = trim($full_name);
 		return !empty($full_name) ? $full_name : $this->display_name;
 	}

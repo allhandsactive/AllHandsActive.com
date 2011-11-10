@@ -153,7 +153,9 @@ function em_content_page_title($content) {
 }
 //add_filter ( 'single_post_title', 'em_content_page_title',1,1 ); //Filter for the wp_title of page, can directly reference page title function
 
-function em_content_wp_title($title, $sep, $seplocation){
+function em_content_wp_title($title, $sep = '', $seplocation = ''){
+	$events_page_id = get_option ( 'dbem_events_page' );
+	if ( get_the_ID() != $events_page_id || $events_page_id == 0 ) { return $title; }
 	// Determines position of the separator and direction of the breadcrumb
 	$title = em_content_page_title($title);
 	$prefix = '';
@@ -170,7 +172,7 @@ function em_content_wp_title($title, $sep, $seplocation){
 	}
 	return $title;
 }
-add_filter ( 'wp_title', 'em_content_wp_title',10,3 );
+add_filter ( 'wp_title', 'em_content_wp_title',100,3 ); //override other plugin SEO due to way EM works.
 
 /**
  * Makes sure we're in "THE Loop", which is determinied by a flag set when the_post() (start) is first called, and when have_posts() (end) returns false.
@@ -213,8 +215,8 @@ function em_filter_get_pages($data) {
 add_filter ( 'get_pages', 'em_filter_get_pages' );
 
 function em_get_page_type(){
-	global $EM_Location, $EM_Category, $EM_Event, $wp_query;	
-	if ( get_option('dbem_events_page') != 0 ) {	
+	global $EM_Location, $EM_Category, $EM_Event, $wp_query, $post;	
+	if ( get_option('dbem_events_page') == $post->ID ) {	
 		if ( !empty( $_REQUEST['calendar_day'] ) ) {
 			return "calendar_day";
 		}elseif ( !empty($_REQUEST['event_categories']) ){
@@ -236,6 +238,8 @@ function em_get_page_type(){
 		}else{
 			return "events";
 		}
+	}else{
+		return false;
 	}
 }
 ?>
