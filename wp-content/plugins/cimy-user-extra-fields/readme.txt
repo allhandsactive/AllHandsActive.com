@@ -4,8 +4,8 @@ Donate link: http://www.marcocimmino.net/cimy-wordpress-plugins/support-the-cimy
 Website link: http://www.marcocimmino.net/cimy-wordpress-plugins/cimy-user-extra-fields/
 Tags: cimy, admin, registration, profile, extra fields, avatar, gravatar, recaptcha, captcha
 Requires at least: 3.1
-Tested up to: 3.2
-Stable tag: 2.2.0
+Tested up to: 3.5
+Stable tag: 2.3.11
 
 Add some useful fields to registration and user's info
 

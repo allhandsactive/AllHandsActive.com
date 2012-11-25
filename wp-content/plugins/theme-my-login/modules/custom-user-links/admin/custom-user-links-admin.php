@@ -16,6 +16,7 @@ class Theme_My_Login_Custom_User_Links_Admin extends Theme_My_Login_Module {
 	 * @access public
 	 */
 	function add_user_link_ajax() {
+		global $theme_my_login;
 
 		if ( !current_user_can( 'manage_options' ) )
 			die( '-1' );
@@ -23,7 +24,7 @@ class Theme_My_Login_Custom_User_Links_Admin extends Theme_My_Login_Module {
 		check_ajax_referer( 'add-user-link' );
 
 		// Create a reference to current links
-		$links =& $GLOBALS['theme_my_login']->options->get_option( 'user_links' );
+		$links =& $theme_my_login->options->get_option( 'user_links' );
 
 		$c = 0;
 		if ( isset( $_POST['new_user_link'] ) ) {
@@ -42,8 +43,8 @@ class Theme_My_Login_Custom_User_Links_Admin extends Theme_My_Login_Module {
 					// Add new link
 					$links[$role][] = array( 'title' => $clean_title, 'url' => $clean_url );
 					// Save links
-					$GLOBALS['theme_my_login']->options->set_option( 'user_links', $links );
-					$GLOBALS['theme_my_login']->options->save();
+					$theme_my_login->options->set_option( 'user_links', $links );
+					$theme_my_login->options->save();
 
 					$link_row = array_merge( array( 'id' => max( array_keys( $links[$role] ) ) ), end( $links[$role] ) );
 
@@ -73,8 +74,8 @@ class Theme_My_Login_Custom_User_Links_Admin extends Theme_My_Login_Module {
 				// Update the link if it has changed
 				if ( $links[$role][$id]['title'] != $clean_title || $links[$role][$id]['url'] != $clean_url ) {
 					$links[$role][$id] = array( 'title' => $clean_title, 'url' => $clean_url );
-					$GLOBALS['theme_my_login']->options->set_option( 'user_links', $links );
-					$GLOBALS['theme_my_login']->options->save();
+					$theme_my_login->options->set_option( 'user_links', $links );
+					$theme_my_login->options->save();
 				}
 
 				$link_row = array_merge( array( 'id' => $id ), $links[$role][$id] );
@@ -101,7 +102,7 @@ class Theme_My_Login_Custom_User_Links_Admin extends Theme_My_Login_Module {
 	 * @access public
 	 */
 	function delete_user_link_ajax() {
-		global $id;
+		global $theme_my_login, $id;
 
 		$user_role = isset( $_POST['user_role'] ) ? $_POST['user_role'] : '';
 		if ( empty( $user_role ) )
@@ -109,13 +110,13 @@ class Theme_My_Login_Custom_User_Links_Admin extends Theme_My_Login_Module {
 
 		check_ajax_referer( "delete-user-link_$id" );
 
-		$links =& $GLOBALS['theme_my_login']->options->get_option( 'user_links' );
+		$links =& $theme_my_login->options->get_option( 'user_links' );
 		if ( isset( $links[$user_role][$id] ) ) {
 			// Delete link
 			unset( $links[$user_role][$id] );
 			// Save links
-			$GLOBALS['theme_my_login']->options->set_option( 'user_links', $links );
-			$GLOBALS['theme_my_login']->options->save();
+			$theme_my_login->options->set_option( 'user_links', $links );
+			$theme_my_login->options->save();
 			die( '1' );
 		}
 		die( '0' );
@@ -217,7 +218,9 @@ class Theme_My_Login_Custom_User_Links_Admin extends Theme_My_Login_Module {
 	 * @param string $role Name of user role
 	 */
 	function display_settings( $role ) {
-		$links =& $GLOBALS['theme_my_login']->options->get_option( array( 'user_links', $role ) );
+		global $theme_my_login;
+
+		$links =& $theme_my_login->options->get_option( array( 'user_links', $role ) );
 		if ( empty($links) )
 			$links = array();
 		?>

@@ -130,7 +130,7 @@ Every registration will have Extra Fields defined by single blogs, every user wi
 
 
 UPDATE FROM A PREVIOUS VERSION:
-- go to Cimy User Extra Fields admin options, press "Fix the problem" button and confirm
+- visit Cimy User Extra Fields admin options, DB upgrade will be performed automatically
 
 
 HOW TO ASSIGN A DEFAULT VALUE TO THE EXTRA FIELDS:
@@ -573,6 +573,19 @@ A: Unluckily due to a WordPress limitation I can’t add Extra Fields into user-
 Cimy User Manager – http://www.marcocimmino.net/cimy-wordpress-plugins/cimy-user-manager/
 
 
+Q: I cannot edit neither delete some Extra Fields, usually after the 10th one, why?
+
+A: Your PHP server is probably limiting number of $_POST elements, Suhosin for example does it. Please allow at least 500 or more vars.
+http://www.hardened-php.net/suhosin/configuration.html#suhosin.post.max_vars
+
+
+Q: I am trying to change the fields' order, but whatever I try it doesn't work, why?
+
+A: First of all you need to select at least 2 fields if you want to change the order.
+Secondly if you change for example field n.1 to position n.3 be sure that field n.3 goes into another position and finally that a field goes into position n.1
+In short: every field should have a new position or at least the same one, but no positions can be skipped or be present multiple times.
+
+
 Q: When feature XYZ will be added?
 
 A: I don't know, remember that this is a 100% free project so answer is "When I have time and/or when someone help me with a donation".
@@ -606,6 +619,72 @@ A lot of times I cannot reproduce the problem and I need more details, so if you
 
 
 CHANGELOG:
+v2.3.11 - 29/10/2012
+- Fixed reCAPTCHA was not working on secure webservers (thanks to invisnet for the patch)
+- Fixed extra lines outputted by php files (thanks to Ov3rfly)
+- Fixed one PHP warning on options save (thanks to thomask)
+- Fixed background logo was stretched under Safari (thanks to DarioDN)
+- Updated Securimage Captcha to v3.0.1
+
+v2.3.10 - 24/09/2012
+- Fixed email is not sent to the user once confirmed its email address (non-MS only) (introduced in v2.3.9) (thanks to nerik73 and all people that reported this)
+- Fixed 'A password will be e-mailed to you.' will be hidden when password field is not hidden (non-MS only) (thanks to lcool for the idea)
+- Fixed labels for dropdown and dropdown-multi were not correctly showed in the welcome email
+
+v2.3.9 - 06/08/2012
+- Fixed another possible security issue where webservers with poor configuration might end up executing arbitrary PHP code when a malicious [file|avatar|picture] is uploaded (thanks to Artyom Skrobov from Secunia)
+- Fixed dropdown-multi were not saved correctly under 'Users Extended' (thanks to David Vranish)
+- Fixed dropdown-multi were not saved correctly under WordPress MS registration (thanks to David Vranish)
+
+v2.3.8 - 30/07/2012
+- Fixed security issue where any site with [file|avatar|picture] extra fields is vulnerable by a possible remote code execution vulnerability present in all versions of the plug-in probably since v0.9.5
+  see: secunia.com/advisories/49975/ ('thanks' to the kid 'Crim3R' that in the need of popularity thought that exposing thousands of users was a better idea rather than responsibly email me first)
+- Fixed image extensions are now restricted to what WordPress allows
+- Fixed plug-in PHP error for people that have 'plugins' directory with a different name/location (thanks to anmari)
+
+v2.3.7 - 05/03/2012
+- Fixed image/file/avatar upload on profile edit when Theme My Login - Themed profile is in use (introduced with v2.3.0) (thanks to Giovanni Gonzalez)
+- Fixed fields were showed anyways in the form confirmation even if they were not showed in the registration
+- Fixed textarea-rich didn't work sometimes in the registration form
+- Fixed registration was not possible if both password field and password meter are present and form confirmation is turned on (introduced with v2.3.3) (thanks to Jörg Thanheiser)
+
+v2.3.6 - 03/02/2012
+- Fixed rules are not applied if form confirmation is turned on (introduced with v2.3.1) (thanks to Pietro Gabba)
+
+v2.3.5 - 30/01/2012
+- Added (required) for extra fields with unchecked 'Can be empty' rule (thanks to Paul 'Sparrow Hawk' Biron for the patch)
+- Changed fields' description is now consistent with WordPress look (thanks to Paul 'Sparrow Hawk' Biron for the patch)
+- Allow 'target' attribute for links added in the extra fields' description
+- Fixed use of a deprecated function on plug-in activation, fixes relative warning (thanks to David Anderson)
+- Added Ukrainian translation (Oleg Bondarenko)
+
+v2.3.4 - 02/01/2012
+- Fixed profiles cannot be updated anymore when there are some rules set (introduced with v2.3.3) (thanks to Csaba)
+- Fixed PHP warnings
+- Code cleanup
+
+v2.3.3 - 29/12/2011
+- Fixed image/file/avatar upload when Theme My Login is in use (introduced with v2.3.0) (thanks to Brandon Krakowsky)
+- Fixed password meter and textarea-rich were not working after submitting a registration with some errors when form confirmation is turned on (introduced with v2.3.0)
+- Fixed a lot of PHP warnings
+- Code cleanup
+- Added Belarusian translation (Alexander Ovsov)
+
+v2.3.2 - 14/12/2011
+- Fixed image upload was no more possible in some cases under WordPress MS (introduced with v2.3.0) (thanks to Alexander Temper)
+- Fixed a rare case of site crash under WordPress MS registration (thanks to Dan)
+
+v2.3.1 - 06/12/2011
+- Fixed profiles cannot be updated anymore when captcha is selected (introduced with v2.3.0) (thanks to Miguel Morera and Takanudo)
+- Fixed captcha error messages are not displayed under WordPress MS
+
+v2.3.0 - 28/11/2011
+- Fixed security issue where reCAPTCHA and Securimage Captcha could be by-passed (thanks to corij)
+- Fixed tinyMCE was not working anymore since WP 3.3
+- Fixed all JavaScripts inclusion to be as requested by WordPress APIs
+- Fixed file, picture and avatar extra fields were not styled on registration page
+- Code cleanup
+
 v2.2.0 - 04/09/2011
 - Added textarea and textarea-rich class in the profile area (thanks to Evaluator)
 - Added case sensitive check for regex equalTo rules (thanks to Juliette for the patch)

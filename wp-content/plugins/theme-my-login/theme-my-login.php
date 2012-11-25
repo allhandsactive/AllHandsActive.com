@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Theme My Login
-Plugin URI: http://www.jfarthing.com/wordpress-plugins/theme-my-login/
+Plugin URI: http://www.jfarthing.com/development/theme-my-login/
 Description: Themes the WordPress login, registration and forgot password pages according to your theme.
-Version: 6.1.4
+Version: 6.2.3
 Author: Jeff Farthing
 Author URI: http://www.jfarthing.com
 Text Domain: theme-my-login
@@ -50,15 +50,7 @@ require_once( TML_ABSPATH . '/includes/class-theme-my-login-widget.php' );
  * @global object $theme_my_login_object
  * @since 6.0
  */
-$GLOBALS['theme_my_login_object'] =& new Theme_My_Login();
-
-/**
- * Holds the reference to @see $theme_my_login_object
- * Use this global for interfacing
- * @global object $theme_my_login
- * @since 1.0
- */
-$GLOBALS['theme_my_login'] =& $GLOBALS['theme_my_login_object'];
+$GLOBALS['theme_my_login'] =& new Theme_My_Login();
 
 // Load active modules
 foreach ( $GLOBALS['theme_my_login']->get_active_and_valid_modules() as $module )
@@ -77,7 +69,7 @@ if ( is_admin() ) {
 	$GLOBALS['theme_my_login_admin'] =& new Theme_My_Login_Admin();
 }
 
-if ( function_exists( 'is_multisite' ) && is_multisite() ) {
+if ( is_multisite() ) {
 	require_once( TML_ABSPATH . '/includes/class-theme-my-login-ms-signup.php' );
 	/**
 	 * Theme My Login MS Signup object
@@ -100,7 +92,8 @@ if ( !function_exists( 'theme_my_login' ) ) :
  * @param string|array $args Template tag arguments
  */
 function theme_my_login( $args = '' ) {
-	echo $GLOBALS['theme_my_login']->shortcode( wp_parse_args( $args ) );
+	global $theme_my_login;
+	echo $theme_my_login->shortcode( wp_parse_args( $args ) );
 }
 endif;
 

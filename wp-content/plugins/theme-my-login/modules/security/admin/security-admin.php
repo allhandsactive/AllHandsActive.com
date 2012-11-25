@@ -16,6 +16,8 @@ class Theme_My_Login_Security_Admin extends Theme_My_Login_Module {
 	 * @access public
 	 */
 	function load_users_page() {
+		global $theme_my_login_security;
+
 		wp_enqueue_script( 'tml-security-admin', plugins_url( TML_DIRNAME . '/modules/security/admin/js/security-admin.js' ), array( 'jquery' ) );
 
 		add_action( 'admin_notices', array( &$this, 'admin_notices' ) );
@@ -35,13 +37,13 @@ class Theme_My_Login_Security_Admin extends Theme_My_Login_Module {
 			if ( 'lock' == $_GET['action'] ) {
 				check_admin_referer( 'lock-user_' . $user->ID );
 
-				$GLOBALS['theme_my_login_security']->lock_user( $user );
+				$theme_my_login_security->lock_user( $user );
 
 				$redirect_to = add_query_arg( 'update', 'lock', $redirect_to );
 			} elseif ( 'unlock' == $_GET['action'] ) {
 				check_admin_referer( 'unlock-user_' . $user->ID );
 
-				$GLOBALS['theme_my_login_security']->unlock_user( $user );
+				$theme_my_login_security->unlock_user( $user );
 
 				$redirect_to = add_query_arg( 'update', 'unlock', $redirect_to );
 			}
@@ -121,10 +123,18 @@ class Theme_My_Login_Security_Admin extends Theme_My_Login_Module {
 	 * @access public
 	 */
 	function display_settings() {
-		// Security options
-		$security = $GLOBALS['theme_my_login']->options->get_option( array( 'security', 'failed_login' ), array() );
+		global $theme_my_login;
+
+		$options =& $theme_my_login->options;
 		?>
 <table class="form-table">
+	<tr valign="top">
+		<th scope="row"><?php _e( 'Private Site', 'theme-my-login' ); ?></th>
+		<td>
+			<input type="checkbox" name="theme_my_login[security][private_site]" id="theme_my_login_security_private_site" value="1"<?php checked( $options->get_option( array( 'security', 'private_site' ) ) ); ?> />
+			<?php _e( 'Require users to be logged in to view site', 'theme-my-login' ); ?>
+		</td>
+	</tr>
 	<tr valign="top">
 		<th scope="row"><?php _e( 'Login Attempts', 'theme-my-login' ); ?></th>
 		<td>
@@ -136,22 +146,22 @@ class Theme_My_Login_Security_Admin extends Theme_My_Login_Module {
 				'day' => __( 'day(s)', 'theme-my-login' )
 				);
 			// Threshold
-			$threshold = '<input type="text" name="theme_my_login[security][failed_login][threshold]" id="theme_my_login_security_failed_login_threshold" value="' . $security['threshold'] . '" size="1" />';
+			$threshold = '<input type="text" name="theme_my_login[security][failed_login][threshold]" id="theme_my_login_security_failed_login_threshold" value="' . $options->get_option( array( 'security', 'failed_login', 'threshold' ) ) . '" size="1" />';
 			// Threshold duration
-			$threshold_duration = '<input type="text" name="theme_my_login[security][failed_login][threshold_duration]" id="theme_my_login_security_failed_login_threshold_duration" value="' . $security['threshold_duration'] . '" size="1" />';
+			$threshold_duration = '<input type="text" name="theme_my_login[security][failed_login][threshold_duration]" id="theme_my_login_security_failed_login_threshold_duration" value="' . $options->get_option( array( 'security', 'failed_login', 'threshold_duration' ) ) . '" size="1" />';
 			// Threshold duration unit
 			$threshold_duration_unit = '<select name="theme_my_login[security][failed_login][threshold_duration_unit]" id="theme_my_login_security_failed_login_threshold_duration_unit">';
 			foreach ( $units as $unit => $label ) {
-				$selected = ( $security['threshold_duration_unit'] == $unit ) ? ' selected="selected"' : '';
+				$selected = ( $options->get_option( array( 'security', 'failed_login', 'threshold_duration_unit' ) ) == $unit ) ? ' selected="selected"' : '';
 				$threshold_duration_unit .= '<option value="' . $unit . '"' . $selected . '>' . $label . '</option>';
 			}
 			$threshold_duration_unit .= '</select>';
 			// Lockout duration
-			$lockout_duration = '<input type="text" name="theme_my_login[security][failed_login][lockout_duration]" id="theme_my_login_security_failed_login_lockout_duration" value="' . $security['lockout_duration'] . '" size="1" />';
+			$lockout_duration = '<input type="text" name="theme_my_login[security][failed_login][lockout_duration]" id="theme_my_login_security_failed_login_lockout_duration" value="' . $options->get_option( array( 'security', 'failed_login', 'lockout_duration' ) ) . '" size="1" />';
 			// Lockout duration unit
 			$lockout_duration_unit = '<select name="theme_my_login[security][failed_login][lockout_duration_unit]" id="theme_my_login_security_failed_login_lockout_duration_unit">';
 			foreach ( $units as $unit => $label ) {
-				$selected = ( $security['lockout_duration_unit'] == $unit ) ? ' selected="selected"' : '';
+				$selected = ( $options->get_option( array( 'security', 'failed_login', 'lockout_duration_unit' ) ) == $unit ) ? ' selected="selected"' : '';
 				$lockout_duration_unit .= '<option value="' . $unit . '"' . $selected . '>' . $label . '</option>';
 			}
 			$lockout_duration_unit .= '</select>';
@@ -176,9 +186,16 @@ class Theme_My_Login_Security_Admin extends Theme_My_Login_Module {
 	 * @return string|array Sanitized settings
 	 */
 	function save_settings( $settings ) {
-		$settings['security']['failed_login']['threshold'] = absint( $settings['security']['failed_login']['threshold'] );
-		$settings['security']['failed_login']['threshold_duration'] = absint( $settings['security']['failed_login']['threshold_duration'] );
-		$settings['security']['failed_login']['lockout_duration'] = absint( $settings['security']['failed_login']['lockout_duration'] );
+		$settings['security'] = array(
+			'private_site' => isset( $_POST['theme_my_login']['security']['private_site'] ),
+			'failed_login' => array(
+				'threshold' => absint( $settings['security']['failed_login']['threshold'] ),
+				'threshold_duration' => absint( $settings['security']['failed_login']['threshold_duration'] ),
+				'threshold_duration_unit' => $settings['security']['failed_login']['threshold_duration_unit'],
+				'lockout_duration' => absint( $settings['security']['failed_login']['lockout_duration'] ),
+				'lockout_duration_unit' => $settings['security']['failed_login']['lockout_duration_unit']
+			)
+		);
 		return $settings;
 	}
 

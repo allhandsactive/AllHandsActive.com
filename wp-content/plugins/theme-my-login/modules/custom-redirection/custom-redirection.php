@@ -45,6 +45,8 @@ class Theme_My_Login_Custom_Redirection extends Theme_My_Login_Module {
 	 * @return string New redirect
 	 */
 	function login_redirect( $redirect_to, $request, $user ) {
+		global $theme_my_login;
+
 		// Determine the correct referer
 		if ( !$http_referer = wp_get_original_referer() )
 			$http_referer = wp_get_referer();
@@ -54,10 +56,13 @@ class Theme_My_Login_Custom_Redirection extends Theme_My_Login_Module {
 
 		// Make sure $user object exists and is a WP_User instance
 		if ( !is_wp_error( $user ) && is_a( $user, 'WP_User' ) ) {
+			if ( is_multisite() && empty( $user->roles ) ) {
+				$user->roles = array( 'subscriber' );
+			}
 			$redirection = array( 'login_type' => 'default' );
 			foreach ( (array) $user->roles as $role ) {
-				if ( $GLOBALS['theme_my_login']->options->get_option( array( 'redirection', $role ) ) ) {
-					$redirection = $GLOBALS['theme_my_login']->options->get_option( array( 'redirection', $role ) );
+				if ( $theme_my_login->options->get_option( array( 'redirection', $role ) ) ) {
+					$redirection = $theme_my_login->options->get_option( array( 'redirection', $role ) );
 					break;
 				}
 			}
@@ -99,6 +104,8 @@ class Theme_My_Login_Custom_Redirection extends Theme_My_Login_Module {
 	 * @return string New redirect
 	 */
 	function logout_redirect( $redirect_to, $request, $user ) {
+		global $theme_my_login;
+
 		// Determine the correct referer
 		if ( !$http_referer = wp_get_original_referer() )
 			$http_referer = wp_get_referer();
@@ -108,10 +115,13 @@ class Theme_My_Login_Custom_Redirection extends Theme_My_Login_Module {
 
 		// Make sure $user object exists and is a WP_User instance
 		if ( !is_wp_error( $user ) && is_a( $user, 'WP_User' ) ) {
+			if ( is_multisite() && empty( $user->roles ) ) {
+				$user->roles = array( 'subscriber' );
+			}
 			$redirection = array();
 			foreach ( (array) $user->roles as $role ) {
-				if ( $GLOBALS['theme_my_login']->options->get_option( array( 'redirection', $role ) ) ) {
-					$redirection = $GLOBALS['theme_my_login']->options->get_option( array( 'redirection', $role ) );
+				if ( $theme_my_login->options->get_option( array( 'redirection', $role ) ) ) {
+					$redirection = $theme_my_login->options->get_option( array( 'redirection', $role ) );
 					break;
 				}
 			}
@@ -129,7 +139,7 @@ class Theme_My_Login_Custom_Redirection extends Theme_My_Login_Module {
 
 		// Make sure $redirect_to isn't empty or pointing to an admin URL (causing an endless loop)
 		if ( empty( $redirect_to ) || strpos( $redirect_to, 'wp-admin' ) !== false )
-			$redirect_to = $GLOBALS['theme_my_login']->get_login_page_link( 'loggedout=true' );
+			$redirect_to = $theme_my_login->get_login_page_link( 'loggedout=true' );
 
 		return $redirect_to;
 	}
@@ -172,7 +182,9 @@ class Theme_My_Login_Custom_Redirection extends Theme_My_Login_Module {
 	 * @param string $role Name of user role
 	 */
 	function display_redirection_settings( $role ) {
-		$redirection =& $GLOBALS['theme_my_login']->options->get_option( array( 'redirection', $role ) );
+		global $theme_my_login;
+
+		$redirection =& $theme_my_login->options->get_option( array( 'redirection', $role ) );
 		?>
 <table class="form-table">
 	<tr valign="top">
@@ -206,9 +218,9 @@ class Theme_My_Login_Custom_Redirection extends Theme_My_Login_Module {
 	/**
 	 * Initializes options for this module
 	 *
-	 * Callback for "tml_init_options" hook in method Theme_My_Login_Base::init_options()
+	 * Callback for "tml_init_options" hook in method Theme_My_Login::init_options()
 	 *
-	 * @see Theme_My_Login_Base::init_options()
+	 * @see Theme_My_Login::init_options()
 	 * @since 6.0
 	 * @access public
 	 *

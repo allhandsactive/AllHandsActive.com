@@ -32,15 +32,14 @@ Theme My Login will always look in your theme's directory first, before using th
 	<?php } ?>
 
 	<?php if ( !is_user_logged_in() ) {
-		echo '(<strong>' . __( 'Your address will be ', 'theme-my-login' );
 		if ( !is_subdomain_install() )
-			echo $current_site->domain . $current_site->path . __( 'sitename' );
+			$site = $current_site->domain . $current_site->path . __( 'sitename' );
 		else
-			echo __( 'domain.', 'theme-my-login' ) . $site_domain . $current_site->path;
-		echo '.</strong>) ' . __( 'Must be at least 4 characters, letters and numbers only. It cannot be changed, so choose carefully!', 'theme-my-login' );
+			$site = __( 'domain' ) . '.' . $site_domain . $current_site->path;
+		echo '<p>(<strong>' . sprintf( __( 'Your address will be %s.', 'theme-my-login' ), $site ) . '</strong>) ' . __( 'Must be at least 4 characters, letters and numbers only. It cannot be changed, so choose carefully!', 'theme-my-login' ) . '</p>';
 	} ?>
 
-	<label for="blog_title"><?php _e( 'Site Title:', 'theme-my-login' ); ?></label>
+	<label for="blog_title<?php $template->the_instance(); ?>"><?php _e( 'Site Title:', 'theme-my-login' ); ?></label>
 	<?php if ( $errmsg = $errors->get_error_message( 'blog_title' ) ) { ?>
 		<p class="error"><?php echo $errmsg ?></p>
 	<?php } ?>

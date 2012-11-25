@@ -9,13 +9,14 @@ function cimy_plugin_install () {
 	
 	$force_update = false;
 	
-	if (!($options = cimy_get_options()))
+	if (!($options = cimy_get_options())) {
 		cimy_manage_db('new_options');
+		$options = cimy_get_options();
+	}
 	else
 		$force_update = true;
 
 	$charset_collate = "";
-	
 	// try to get proper charset and collate
 	if ( $wpdb->supports_collation() ) {
 		if ( ! empty($wpdb->charset) )
@@ -216,34 +217,74 @@ function cimy_plugin_install () {
 			$options["welcome_email"] = $welcome_email;
 		}
 
+		if (version_compare($options['version'], "2.2.0", "<=") === true) {
+			$javascripts_dep = array(
+			'file_fields' => array(
+				'show_in_reg' => 0,
+				'show_in_profile' => 0,
+				'show_in_aeu' => 0,
+				'show_in_blog' => 0,
+				'show_in_search' => 0
+			),
+			'image_fields' => array(
+				'show_in_reg' => 0,
+				'show_in_profile' => 0,
+				'show_in_aeu' => 0,
+				'show_in_blog' => 0,
+				'show_in_search' => 0
+			),
+			'tinymce_fields' => array(
+				'show_in_reg' => 0,
+				'show_in_profile' => 0,
+				'show_in_aeu' => 0,
+				'show_in_blog' => 0,
+				'show_in_search' => 0
+			));
+			$sql = "SELECT TYPE, RULES FROM ".$wpdb_fields_table;
+			$all_rules = $wpdb->get_results($sql, ARRAY_A);
+
+			if (isset($all_rules)) {
+				foreach ($all_rules as $rule) {
+					$rules = unserialize($rule["RULES"]);
+					$type = $rule["TYPE"];
+					$javascripts_dep = cimy_uef_set_javascript_dependencies($javascripts_dep, $type, "show_in_reg", $rules["show_in_reg"]);
+					$javascripts_dep = cimy_uef_set_javascript_dependencies($javascripts_dep, $type, "show_in_profile", $rules["show_in_profile"]);
+					$javascripts_dep = cimy_uef_set_javascript_dependencies($javascripts_dep, $type, "show_in_aeu", $rules["show_in_aeu"]);
+					$javascripts_dep = cimy_uef_set_javascript_dependencies($javascripts_dep, $type, "show_in_blog", $rules["show_in_blog"]);
+					$javascripts_dep = cimy_uef_set_javascript_dependencies($javascripts_dep, $type, "show_in_search", $rules["show_in_search"]);
+				}
+			}
+			$options['file_fields'] = $javascripts_dep['file_fields'];
+			$options['image_fields'] = $javascripts_dep['image_fields'];
+			$options['tinymce_fields'] = $javascripts_dep['tinymce_fields'];
+		}
+
 		$options['version'] = $cimy_uef_version;
 
 		cimy_set_options($options);
 	}
 	
 	if ($wpdb->get_var("SHOW TABLES LIKE '$wpdb_wp_fields_table'") != $wpdb_wp_fields_table) {
-
 		$sql = "CREATE TABLE ".$wpdb_wp_fields_table." (ID bigint(20) NOT NULL AUTO_INCREMENT, F_ORDER bigint(20) NOT NULL, NAME varchar(20), LABEL TEXT, DESCRIPTION TEXT, TYPE varchar(20), RULES TEXT, VALUE TEXT, PRIMARY KEY (ID), INDEX F_ORDER (F_ORDER), INDEX NAME (NAME))".$charset_collate.";";
 
-		require_once(ABSPATH . 'wp-admin/upgrade-functions.php');
+		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 	}
 
 	if ($wpdb->get_var("SHOW TABLES LIKE '$wpdb_data_table'") != $wpdb_data_table) {
-
 		$sql = "CREATE TABLE ".$wpdb_data_table." (ID bigint(20) NOT NULL AUTO_INCREMENT, USER_ID bigint(20) NOT NULL, FIELD_ID bigint(20) NOT NULL, VALUE TEXT NOT NULL, PRIMARY KEY (ID), INDEX USER_ID (USER_ID), INDEX FIELD_ID (FIELD_ID))".$charset_collate.";";
 
-		require_once(ABSPATH . 'wp-admin/upgrade-functions.php');
+		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 	}
 
 	if ($wpdb->get_var("SHOW TABLES LIKE '$wpdb_fields_table'") != $wpdb_fields_table) {
-
 		$sql = "CREATE TABLE ".$wpdb_fields_table." (ID bigint(20) NOT NULL AUTO_INCREMENT, F_ORDER bigint(20) NOT NULL, FIELDSET bigint(20) NOT NULL DEFAULT 0, NAME varchar(20), LABEL TEXT, DESCRIPTION TEXT, TYPE varchar(20), RULES TEXT, VALUE TEXT, PRIMARY KEY (ID), INDEX F_ORDER (F_ORDER), INDEX NAME (NAME))".$charset_collate.";";
 
-		require_once(ABSPATH . 'wp-admin/upgrade-functions.php');
+		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 	}
+	return $options;
 }
 
 function cimy_force_signup_table_creation() {
@@ -275,7 +316,7 @@ function cimy_force_signup_table_creation() {
 			KEY domain (domain)
 		)".$charset_collate.";";
 
-		require_once(ABSPATH . 'wp-admin/upgrade-functions.php');
+		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 	}
 }
@@ -296,8 +337,35 @@ function cimy_manage_db($command) {
 		'aue_hidden_fields' => array('website', 'posts', 'email'),
 		'wp_hidden_fields' => array(),
 		'fieldset_title' => '',
+		'registration-logo' => '',
 		'captcha' => 'none',
 		'welcome_email' => $welcome_email,
+		'confirm_form' => false,
+		'confirm_email' => false,
+		'password_meter' => false,
+		'mail_include_fields' => false,
+		'redirect_to' => '',
+		'file_fields' => array(
+			'show_in_reg' => 0,
+			'show_in_profile' => 0,
+			'show_in_aeu' => 0,
+			'show_in_blog' => 0,
+			'show_in_search' => 0
+		),
+		'image_fields' => array(
+			'show_in_reg' => 0,
+			'show_in_profile' => 0,
+			'show_in_aeu' => 0,
+			'show_in_blog' => 0,
+			'show_in_search' => 0
+		),
+		'tinymce_fields' => array(
+			'show_in_reg' => 0,
+			'show_in_profile' => 0,
+			'show_in_aeu' => 0,
+			'show_in_blog' => 0,
+			'show_in_search' => 0
+		)
 	);
 
 	switch ($command) {
@@ -498,5 +566,3 @@ function cimy_uef_get_meta_from_url($domain, $path) {
 
 	return $wpdb->get_row($wpdb->prepare("SELECT user_login, user_email, meta FROM ".$wpdb->prefix."signups WHERE domain = %s AND path = %s AND active = %d", $domain, $path, 0), ARRAY_A );
 }
-
-?>

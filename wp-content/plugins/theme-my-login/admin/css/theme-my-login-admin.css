@@ -2,7 +2,7 @@
 
 #tml-container table th { width: 125px; }
 
-#tml-container table h3 { margin: 5px 0; font: italic normal normal 18px/23px Georgia, "Times New Roman", "Bitstream Charter", Times, serif; }
+#tml-container table h3 { margin: 5px 0; font: normal 18px "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",sans-serif; }
 
 #tml-container table input.regular-text { width: 25em; }
 #tml-container table input.extended-text { width: 40em; }

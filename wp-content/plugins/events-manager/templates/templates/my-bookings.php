@@ -18,18 +18,12 @@
 		echo $EM_Notices;
 		?>
 		<div class='em-my-bookings'>
-				<!--
-				<ul class="subsubsub">
-					<li>
-						<a href='edit.php?post_type=post' class="current">All <span class="count">(1)</span></a> |
-					</li>
-				</ul>
-				-->
 				<?php if ( $bookings_count >= $limit ) : ?>
 				<div class='tablenav'>
 					<?php 
 					if ( $bookings_count >= $limit ) {
-						$bookings_nav = em_admin_paginate( $bookings_count, $limit, $page, array('em_ajax'=>0, 'em_obj'=>'em_bookings_confirmed_table'));
+						$link = em_add_get_params($_SERVER['REQUEST_URI'], array('pno'=>'%PAGE%'), false); //don't html encode, so em_paginate does its thing
+						$bookings_nav = em_paginate( $link, $bookings_count, $limit, $page);
 						echo $bookings_nav;
 					}
 					?>
@@ -55,23 +49,24 @@
 						$event_count = 0;
 						$nonce = wp_create_nonce('booking_cancel');
 						foreach ($EM_Bookings as $EM_Booking) {
+							/* @var $EM_Booking EM_Booking */
 							$EM_Event = $EM_Booking->get_event();						
 							if( ($rowno < $limit || empty($limit)) && ($event_count >= $offset || $offset === 0) ) {
 								$rowno++;
 								?>
 								<tr>
 									<td><?php echo $EM_Event->output("#_EVENTLINK"); ?></td>
-									<td><?php echo date_i18n( get_option('date_format'), $EM_Event->start ); ?></td>
+									<td><?php echo date_i18n( get_option('dbem_date_format'), $EM_Event->start ); ?></td>
 									<td><?php echo $EM_Booking->get_spaces() ?></td>
 									<td>
-										<?php echo apply_filters('em_my_bookings_booking_status', $EM_Booking->status_array[$EM_Booking->status], $EM_Booking); ?>
+										<?php echo $EM_Booking->get_status(); ?>
 									</td>
 									<td>
 										<?php
 										$cancel_link = '';
-										if($EM_Booking->status != 3 && get_option('dbem_bookings_user_cancellation')){
-											$cancel_url = em_add_get_params($_SERVER['REQUEST_URI'], array('action'=>'booking_cancel', 'booking_id'=>$EM_Booking->id, '_wpnonce'=>$nonce));
-											$cancel_link = '<a class="em-bookings-cancel" href="'.$cancel_url.'" onclick="if( !confirm(\''. __('Are you sure you want to cancel your booking?','dbem') .'\') ){ return false; }">'.__('Cancel','dbem').'</a>';
+										if( !in_array($EM_Booking->status, array(2,3)) && get_option('dbem_bookings_user_cancellation') && $EM_Event->get_bookings()->has_open_time() ){
+											$cancel_url = em_add_get_params($_SERVER['REQUEST_URI'], array('action'=>'booking_cancel', 'booking_id'=>$EM_Booking->booking_id, '_wpnonce'=>$nonce));
+											$cancel_link = '<a class="em-bookings-cancel" href="'.$cancel_url.'" onclick="if( !confirm(EM.booking_warning_cancel) ){ return false; }">'.__('Cancel','dbem').'</a>';
 										}
 										echo apply_filters('em_my_bookings_booking_actions', $cancel_link, $EM_Booking);
 										?>
@@ -97,6 +92,6 @@
 			<?php endif; ?>
 		</div>	
 <?php else: ?>
-	<p><?php echo sprintf(__('Please <a href="%s">Log In</a> to view your bookings.','dbem'),site_url('wp-login.php', 'login'))?></p>
+	<p><?php echo sprintf(__('Please <a href="%s">Log In</a> to view your bookings.','dbem'),site_url('wp-login.php?redirect_to=' . urlencode(get_permalink()), 'login'))?></p>
 <?php endif; ?>
 <?php do_action('em_template_my_bookings_footer', $EM_Bookings); ?>

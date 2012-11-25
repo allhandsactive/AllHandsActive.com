@@ -48,5 +48,3 @@ function cimy_uef_mu_blog_exists($blog_id, $c_site_id=-1) {
 
 	return false;
 }
-
-?>

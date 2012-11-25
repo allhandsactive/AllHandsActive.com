@@ -27,5 +27,3 @@ function wp_load_image( $file ) {
 
 	return $image;
 }
-
-?>

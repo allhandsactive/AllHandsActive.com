@@ -3,13 +3,13 @@
 Plugin Name: Cimy User Extra Fields
 Plugin URI: http://www.marcocimmino.net/cimy-wordpress-plugins/cimy-user-extra-fields/
 Description: Add some useful fields to registration and user's info
-Version: 2.2.0
+Version: 2.3.11
 Author: Marco Cimmino
 Author URI: mailto:cimmino.marco@gmail.com
 License: GPL2
 
 Cimy User Extra Fields - Allows adding mySQL Data fields to store/add more user info
-Copyright (c) 2006-2011 Marco Cimmino
+Copyright (c) 2006-2012 Marco Cimmino
 
 Code for drop-down support is in part from Raymond Elferink raymond@raycom.com
 Code for regular expression under equalTo rule is in part from Shane Hartman shane@shanehartman.com
@@ -36,6 +36,7 @@ The full copy of the GNU General Public License is available here: http://www.gn
 // added for WordPress >=2.5 compatibility
 global $wpdb, $old_wpdb_data_table, $wpdb_data_table, $old_wpdb_fields_table, $wpdb_fields_table, $wpdb_wp_fields_table, $cimy_uef_options, $cimy_uef_version, $cuef_upload_path, $cimy_uef_domain, $cimy_uef_plugins_dir;
 
+if (!function_exists('cimy_uef_set_tables')) :
 function cimy_uef_set_tables() {
 	global $wpdb, $old_wpdb_data_table, $wpdb_data_table, $old_wpdb_fields_table, $wpdb_fields_table, $wpdb_wp_fields_table, $cimy_uef_options, $cimy_uef_version, $cuef_upload_path, $cimy_uef_domain, $cimy_uef_plugins_dir;
 	$prefix = $wpdb->prefix;
@@ -58,6 +59,7 @@ function cimy_uef_set_tables() {
 	$wpdb_fields_table = $prefix."cimy_uef_fields";
 	$wpdb_wp_fields_table = $prefix."cimy_uef_wp_fields";
 }
+endif;
 
 cimy_uef_set_tables();
 
@@ -135,40 +137,20 @@ $cuef_plugin_name = basename(__FILE__);
 $cuef_plugin_path = plugin_basename(dirname(__FILE__))."/";
 $cuef_upload_path = WP_CONTENT_DIR."/Cimy_User_Extra_Fields/";
 $cuef_upload_webpath = content_url("Cimy_User_Extra_Fields/");
-
-if (is_multisite()) {
-	$cuef_plugin_path = "Cimy_User_Extra_Fields/";
-	$cuef_plugin_dir = WP_CONTENT_DIR."/".$cimy_uef_plugins_dir."/";
-
-	if (!is_dir($cuef_plugin_dir.$cuef_plugin_path))
-		$cuef_plugin_path = "cimy-user-extra-fields/";
-
-	$cuef_plugin_dir.= $cuef_plugin_path;
-}
-else {
-	$cuef_plugin_dir = WP_CONTENT_DIR."/plugins/".$cuef_plugin_path;
-}
-
-// let's use plugins_url to build urls, take in account https too
+// this is more accurate to detect plug-in path, some people might even rename /plugins/
+$cuef_plugin_dir = plugin_dir_path(__FILE__);
 $cimy_uef_plugins_dirprefix = "";
 if ($cimy_uef_plugins_dir == "mu-plugins")
-	$cimy_uef_plugins_dirprefix = $cuef_plugin_path;
+	$cimy_uef_plugins_dirprefix = "cimy-user-extra-fields/";
 
+$cuef_plugin_dir.= $cimy_uef_plugins_dirprefix;
+
+// let's use plugins_url function to build urls, takes in account https too
 $cuef_css_webpath = plugins_url($cimy_uef_plugins_dirprefix."css", __FILE__);
 $cuef_js_webpath = plugins_url($cimy_uef_plugins_dirprefix."js", __FILE__);
 $cuef_securimage_webpath = plugins_url($cimy_uef_plugins_dirprefix."securimage", __FILE__);
 
-wp_register_script("cimy_uef_upload_file", $cuef_js_webpath."/upload_file.js", false, false);
-wp_register_script("cimy_uef_img_selection", $cuef_js_webpath."/img_selection.js", false, false);
-
-function cimy_uef_admin_init() {
-	global $cuef_js_webpath;
-	wp_register_script("cimy_uef_invert_sel", $cuef_js_webpath."/invert_sel.js", false, false);
-	wp_register_script("cimy_uef_ajax_new_value", $cuef_js_webpath."/ajax_new_value.js", false, false);
-}
-
-add_action('admin_init', 'cimy_uef_admin_init');
-
+require_once($cuef_plugin_dir.'/cimy_uef_init.php');
 require_once($cuef_plugin_dir.'/cimy_uef_email_handler.php');
 require_once($cuef_plugin_dir.'/cimy_uef_db.php');
 require_once($cuef_plugin_dir.'/cimy_uef_register.php');
@@ -177,14 +159,16 @@ require_once($cuef_plugin_dir.'/cimy_uef_functions.php');
 require_once($cuef_plugin_dir.'/cimy_uef_options.php');
 require_once($cuef_plugin_dir.'/cimy_uef_admin.php');
 
+add_action('admin_init', 'cimy_uef_admin_init');
+
 $cimy_uef_name = "Cimy User Extra Fields";
-$cimy_uef_version = "2.2.0";
+$cimy_uef_version = "2.3.11";
 $cimy_uef_url = "http://www.marcocimmino.net/cimy-wordpress-plugins/cimy-user-extra-fields/";
 $cimy_project_url = "http://www.marcocimmino.net/cimy-wordpress-plugins/support-the-cimy-project-paypal/";
 
 $start_cimy_uef_comment = "<!--\n";
 $start_cimy_uef_comment .= "\tStart code from ".$cimy_uef_name." ".$cimy_uef_version."\n";
-$start_cimy_uef_comment .= "\tCopyright (c) 2006-2011 Marco Cimmino\n";
+$start_cimy_uef_comment .= "\tCopyright (c) 2006-2012 Marco Cimmino\n";
 $start_cimy_uef_comment .= "\t".$cimy_uef_url."\n";
 $start_cimy_uef_comment .= "-->\n";
 
@@ -220,6 +204,7 @@ $wp_hidden_fields = array(
 								'show_in_search' => false,
 								'show_in_blog' => false,
 								'show_level' => -1,
+								'advanced_options' => '',
 								),
 					),
 			'password2' => array(
@@ -240,6 +225,7 @@ $wp_hidden_fields = array(
 								'show_in_search' => false,
 								'show_in_blog' => false,
 								'show_level' => -1,
+								'advanced_options' => '',
 								),
 					),
 			'firstname' => array(
@@ -257,9 +243,10 @@ $wp_hidden_fields = array(
 								'show_in_reg' => true,
 								'show_in_profile' => true,
 								'show_in_aeu' => true,
-								'show_in_search' => true,
-								'show_in_blog' => true,
+								'show_in_search' => false,
+								'show_in_blog' => false,
 								'show_level' => -1,
+								'advanced_options' => '',
 								),
 					),
 			'lastname' => array(
@@ -277,9 +264,10 @@ $wp_hidden_fields = array(
 								'show_in_reg' => true,
 								'show_in_profile' => true,
 								'show_in_aeu' => true,
-								'show_in_search' => true,
-								'show_in_blog' => true,
+								'show_in_search' => false,
+								'show_in_blog' => false,
 								'show_level' => -1,
+								'advanced_options' => '',
 								),
 					),
 			'nickname' => array(
@@ -297,9 +285,10 @@ $wp_hidden_fields = array(
 								'show_in_reg' => true,
 								'show_in_profile' => true,
 								'show_in_aeu' => true,
-								'show_in_search' => true,
-								'show_in_blog' => true,
+								'show_in_search' => false,
+								'show_in_blog' => false,
 								'show_level' => -1,
+								'advanced_options' => '',
 								),
 					),
 			'website' => array(
@@ -317,9 +306,10 @@ $wp_hidden_fields = array(
 								'show_in_reg' => true,
 								'show_in_profile' => true,
 								'show_in_aeu' => true,
-								'show_in_search' => true,
-								'show_in_blog' => true,
+								'show_in_search' => false,
+								'show_in_blog' => false,
 								'show_level' => -1,
+								'advanced_options' => '',
 								),
 					),
 			'aim' => array(
@@ -337,9 +327,10 @@ $wp_hidden_fields = array(
 								'show_in_reg' => true,
 								'show_in_profile' => true,
 								'show_in_aeu' => true,
-								'show_in_search' => true,
-								'show_in_blog' => true,
+								'show_in_search' => false,
+								'show_in_blog' => false,
 								'show_level' => -1,
+								'advanced_options' => '',
 								),
 					),
 			'yahoo' => array(
@@ -357,9 +348,10 @@ $wp_hidden_fields = array(
 								'show_in_reg' => true,
 								'show_in_profile' => true,
 								'show_in_aeu' => true,
-								'show_in_search' => true,
-								'show_in_blog' => true,
+								'show_in_search' => false,
+								'show_in_blog' => false,
 								'show_level' => -1,
+								'advanced_options' => '',
 								),
 					),
 			'jgt' => array(
@@ -377,9 +369,10 @@ $wp_hidden_fields = array(
 								'show_in_reg' => true,
 								'show_in_profile' => true,
 								'show_in_aeu' => true,
-								'show_in_search' => true,
-								'show_in_blog' => true,
+								'show_in_search' => false,
+								'show_in_blog' => false,
 								'show_level' => -1,
+								'advanced_options' => '',
 								),
 					),
 			'bio-info' => array(
@@ -397,9 +390,10 @@ $wp_hidden_fields = array(
 								'show_in_reg' => true,
 								'show_in_profile' => true,
 								'show_in_aeu' => true,
-								'show_in_search' => true,
-								'show_in_blog' => true,
+								'show_in_search' => false,
+								'show_in_blog' => false,
 								'show_level' => -1,
+								'advanced_options' => '',
 								),
 					),
 			);
@@ -439,6 +433,9 @@ $rule_equalto_regex  = array("text", "textarea", "textarea-rich", "password", "d
 
 // types that are file to be uploaded
 $cimy_uef_file_types = array("picture", "avatar", "file");
+
+// types that are images to be uploaded
+$cimy_uef_file_images_types = array("picture", "avatar");
 
 // types that are textarea and needs rows and cols attributes
 $cimy_uef_textarea_types = array("textarea", "textarea-rich");
@@ -519,17 +516,19 @@ else {
 
 	// add checks for extra fields in the registration form
 	add_action('register_post', 'cimy_registration_check', 10, 3);
+	add_action('register_post', 'cimy_registration_captcha_check', 11, 3);
 	
 	// add extra fields to registration form
 	add_action('register_form', 'cimy_registration_form', 1);
 
 	// add custom login/registration css
-	add_action('login_head', 'cimy_uef_register_css');
+	add_action('login_enqueue_scripts', 'cimy_uef_register_css');
 
 	// add custom login/registration logo
 	add_action('login_head', 'cimy_change_login_registration_logo');
 
 	// add confirmation form
+	// WARNING: this trick will trigger the registration twice!
 	add_action('login_form_register', 'cimy_confirmation_form');
 
 	// add filter for email activation
@@ -544,36 +543,12 @@ else {
 	add_action('login_form_cimy_uef_redirect', 'cimy_uef_redirect');
 }
 
-function cimy_uef_registration_redirect($redirect_to) {
-	if (empty($redirect_to)) {
-		$options = cimy_get_options();
+// with Theme My Login is more complicated, but we know how to workaround it
+add_action('wp_enqueue_scripts', 'cimy_uef_theme_my_login_fix', 15);
 
-		if ($options["redirect_to"] == "source")
-			$redirect_to = esc_attr($_SERVER["HTTP_REFERER"]);
-	}
-
-	return $redirect_to;
-}
-
-function cimy_uef_redirect() {
-	if (isset($_GET["cimy_key"]))
-		cimy_uef_activate("");
-
-	if (!empty($_REQUEST["redirect_to"]))
-		wp_safe_redirect($_REQUEST["redirect_to"]);
-
-}
-
-function cimy_change_signup_location($url) {
-	global $blog_id, $current_site, $cimy_uef_plugins_dir;
-
-	if ($cimy_uef_plugins_dir == "plugins")
-		$attribute = "?blog_id=".$blog_id;
-	else
-		$attribute = "";
-
-	return "http://" . $current_site->domain . $current_site->path . "wp-signup.php".$attribute;
-}
+// add javascripts to profile edit
+add_action('admin_print_scripts-user-edit.php', 'cimy_uef_admin_profile_init_js');
+add_action('admin_print_scripts-profile.php', 'cimy_uef_admin_profile_init_js');
 
 // add filter for random generated password
 add_filter('random_password', 'cimy_register_overwrite_password');
@@ -607,342 +582,3 @@ add_filter('get_avatar', 'cimy_uef_avatar_filter', 1, 5);
 
 // add code to handle new value from ajax code in A&U Extended
 add_action('wp_ajax_save-extra-field-new-value', 'cimy_uef_admin_ajax_save_ef_new_value');
-
-function cimy_uef_avatar_filter($avatar, $id_or_email, $size, $default, $alt="") {
-	global $wpdb, $wpdb_data_table, $wpdb_fields_table, $cuef_upload_path;
-
-	$sql = "SELECT ID,VALUE FROM $wpdb_fields_table WHERE TYPE='avatar' LIMIT 1";
-	$res = $wpdb->get_results($sql);
-
-	if (empty($res))
-		return $avatar;
-
-	$field_id = $res[0]->ID;
-	$overwrite_default = $res[0]->VALUE;
-
-	// if there is no avatar field all the rest is totally cpu time wasted, returning...
-	if (!isset($field_id))
-		return $avatar;
-
-	if (!empty($overwrite_default))
-		$overwrite_default = "<img alt='{$safe_alt}' src='{$overwrite_default}' class='avatar avatar-{$size} photo avatar-default' height='{$size}' width='{$size}' />";
-
-	$email = '';
-	$user_login = '';
-
-	// $id_or_email could be id, email or an object... fancy way to implement things!
-	// we may have the id
-	if ( is_numeric($id_or_email) ) {
-		$id = (int) $id_or_email;
-		$user = get_userdata($id);
-		if ( $user ) {
-			$email = $user->user_email;
-			$user_login = $user->user_login;
-		}
-	} elseif ( is_object($id_or_email) ) {
-		// we may have the object...
-		if ( isset($id_or_email->comment_type) && '' != $id_or_email->comment_type && 'comment' != $id_or_email->comment_type )
-			return false; // No avatar for pingbacks or trackbacks, maybe useless as same check is performed before this code is fired...
-
-		if ( !empty($id_or_email->user_id) ) {
-			$id = (int) $id_or_email->user_id;
-			$user = get_userdata($id);
-			if ( $user) {
-				$email = $user->user_email;
-				$user_login = $user->user_login;
-			}
-		} else {
-			// no user_id no custom avatar, nothing else to do
-			return $avatar;
-		}
-	} else {
-		// ...or we may have the email
-		$email = $id_or_email;
-
-		$sql = sprintf("SELECT ID, user_login FROM %s WHERE user_email='%s' LIMIT 1", $wpdb->users, $wpdb->escape($email));
-		$res = $wpdb->get_results($sql);
-
-		// something went wrong, aborting and returning normal avatar
-		if (!isset($res))
-			return $avatar;
-
-		$id = $res[0]->ID;
-		$user_login = $res[0]->user_login;
-	}
-
-	if (isset($id)) {
-		$sql = "SELECT data.VALUE FROM $wpdb_data_table as data JOIN $wpdb_fields_table as efields ON efields.id=data.field_id WHERE (efields.TYPE='avatar' AND data.USER_ID=$id) LIMIT 1";
-
-		$value = $wpdb->get_var($sql);
-
-		if ( false === $alt)
-			$safe_alt = '';
-		else
-			$safe_alt = esc_attr($alt);
-
-		// max $size allowed is 512
-		if (isset($value)) {
-			if ($value == "") {
-				// apply default only here or below, as we are sure to have an user that did not set anything
-				if ($overwrite_default != "")
-					return $overwrite_default;
-				else
-					return $avatar;
-			}
-
-			$thumb_value = cimy_get_thumb_path($value);
-			$file_thumb = $cuef_upload_path.$user_login."/avatar/".cimy_get_thumb_path(basename($value));
-
-			if (is_file($file_thumb))
-				$value = $thumb_value;
-
-			$avatar = "<img alt='{$safe_alt}' src='{$value}' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' />";
-		}
-		// apply default only here, as we are sure to have an user that did not set anything
-		else if ($overwrite_default != "")
-			return $overwrite_default;
-	}
-
-	return $avatar;
-}
-
-function cimy_uef_register_css() {
-	global $cuef_css_webpath;
-	wp_register_style("cimy_uef_register", $cuef_css_webpath."/cimy_uef_register.css", false, false);
-	wp_enqueue_style("cimy_uef_register");
-	wp_print_styles();
-}
-
-function cimy_change_login_registration_logo() {
-	$options = cimy_get_options();
-
-	if (!empty($options["registration-logo"])) {
-		global $cuef_upload_webpath;
-		list($logo_width, $logo_height, $logo_type, $logo_attr) = getimagesize($options["registration-logo"]);
-		?>
-		<style type="text/css">
-		#login h1:first-child a:first-child {
-			background: url(<?php echo esc_url($cuef_upload_webpath.basename($options["registration-logo"])); ?>) no-repeat top center;
-			background-position: center top;
-			width: <?php echo max(328, $logo_width); ?>px;
-			height: <?php echo $logo_height; ?>px;
-			text-indent: -9999px;
-			overflow: hidden;
-			padding-bottom: 15px;
-			display: block;
-		}
-		</style>
-		<?php
-	}
-}
-
-function cimy_uef_i18n_setup() {
-	global $cimy_uef_domain, $cimy_uef_i18n_is_setup, $cuef_plugin_path, $cimy_uef_plugins_dir;
-
-	if ($cimy_uef_i18n_is_setup)
-		return;
-
-	// Stupid function, from relative path I need to go down because starts from WP_PLUGIN_DIR!
-	if (is_multisite())
-		load_plugin_textdomain($cimy_uef_domain, false, '../'.$cimy_uef_plugins_dir.'/'.$cuef_plugin_path.'langs');
-	else
-		load_plugin_textdomain($cimy_uef_domain, false, $cuef_plugin_path.'langs');
-}
-
-function cimy_admin_menu_custom() {
-	global $cimy_uef_name, $cimy_uef_domain, $cimy_top_menu, $cimy_uef_plugins_dir;
-
-	$aue_page = "";
-	if (isset($cimy_top_menu) && (!is_multisite())) {
-		add_submenu_page('cimy_series.php', $cimy_uef_name.": ".__("Options"), "UEF: ".__("Options"), 'manage_options', "user_extra_fields_options", 'cimy_show_options_notembedded');
-		add_submenu_page('cimy_series.php', $cimy_uef_name.": ".__("Fields", $cimy_uef_domain), "UEF: ".__("Fields", $cimy_uef_domain), 'manage_options', "user_extra_fields", 'cimy_admin_define_extra_fields');
-		$aue_page = add_submenu_page('profile.php', __('Users Extended', $cimy_uef_domain), __('Users Extended', $cimy_uef_domain), 'list_users', "users_extended", 'cimy_admin_users_list_page');
-	}
-	else {
-		if ((is_multisite()) && ($cimy_uef_plugins_dir == "mu-plugins")) {
-// 			$aue_page = add_submenu_page('wpmu-admin.php', __("Users Extended", $cimy_uef_domain), __("Users Extended", $cimy_uef_domain), 'list_users', "users_extended", 'cimy_admin_users_list_page');
-// 			add_submenu_page('wpmu-admin.php', $cimy_uef_name, $cimy_uef_name, 'manage_options', "user_extra_fields", 'cimy_admin_define_extra_fields');
-
-			// Since WP 3.1 we have network admin and everything seems changed
-			$aue_page = add_submenu_page('users.php', __("Users Extended", $cimy_uef_domain), __("Users Extended", $cimy_uef_domain), 'list_users', "users_extended", 'cimy_admin_users_list_page');
-			add_submenu_page('settings.php', $cimy_uef_name, $cimy_uef_name, 'manage_options', "user_extra_fields", 'cimy_admin_define_extra_fields');
-		}
-		else {
-			add_options_page($cimy_uef_name, $cimy_uef_name, 'manage_options', "user_extra_fields", 'cimy_admin_define_extra_fields');
-			$aue_page = add_submenu_page('profile.php', __('Users Extended', $cimy_uef_domain), __('Users Extended', $cimy_uef_domain), 'list_users', "users_extended", 'cimy_admin_users_list_page');
-		}
-	}
-	if (!empty($aue_page))
-		add_action('admin_print_scripts-'.$aue_page, 'cimy_uef_admin_ajax_edit');
-}
-
-function cimy_manage_upload($input_name, $user_login, $rules, $old_file=false, $delete_file=false, $type="", $new_filename="") {
-	global $cuef_upload_path, $cuef_upload_webpath, $cuef_plugin_dir, $cimy_uef_plugins_dir;
-
-	$type_path = "";
-	if (($type == "file") || ($type == "avatar"))
-		$type_path.= $type."/";
-
-	$blog_path = $cuef_upload_path;
-
-	if (($cimy_uef_plugins_dir == "plugins") && (is_multisite())) {
-		global $blog_id;
-
-		$blog_path .= $blog_id."/";
-
-		// create blog subdir
-		if (!is_dir($blog_path)) {
-			if (defined("FS_CHMOD_DIR")) {
-				mkdir($blog_path, FS_CHMOD_DIR);
-				chmod($blog_path, FS_CHMOD_DIR);
-			}
-			else {
-				mkdir($blog_path, 0777);
-				chmod($blog_path, 0777);
-			}
-		}
-	}
-
-	if (!empty($user_login)) {
-		$user_path = $blog_path.$user_login."/";
-		$file_path = $blog_path.$user_login."/".$type_path;
-	}
-	else {
-		$user_path = $blog_path;
-		$file_path = $blog_path.$type_path;
-	}
-	if (!empty($new_filename))
-		$file_name = $new_filename;
-	else
-		$file_name = $_FILES[$input_name]['name'];
-
-	// protect from site traversing
-	$file_name = str_replace('../', '', $file_name);
-	$file_name = str_replace('/', '', $file_name);
-	
-	// delete old file if requested
-	if ($delete_file) {
-		if (is_file($file_path.$old_file))
-			unlink($file_path.$old_file);
-	
-		$old_thumb_file = cimy_get_thumb_path($old_file);
-		
-		if (is_file($file_path.$old_thumb_file))
-			unlink($file_path.$old_thumb_file);
-	}
-
-	// if $user_login is not present
-	//	or there is no file to upload
-	//	or dest dir is not writable
-	// then everything else is useless
-	if ((($user_login == "") && ($type != "registration-logo")) || (!isset($_FILES[$input_name]['name'])) || (!is_writable($cuef_upload_path)))
-		return "";
-
-	// create user subdir
-	if (!is_dir($user_path)) {
-		if (defined("FS_CHMOD_DIR")) {
-			mkdir($user_path, FS_CHMOD_DIR);
-			chmod($user_path, FS_CHMOD_DIR);
-		}
-		else {
-			mkdir($user_path, 0777);
-			chmod($user_path, 0777);
-		}
-	}
-
-	// create avatar subdir if needed
-	if (($type != "registration-logo") && ($type != "picture") && (!is_dir($file_path))) {
-		if (defined("FS_CHMOD_DIR")) {
-			mkdir($file_path, FS_CHMOD_DIR);
-			chmod($file_path, FS_CHMOD_DIR);
-		}
-		else {
-			mkdir($file_path, 0777);
-			chmod($file_path, 0777);
-		}
-	}
-	
-	// picture filesystem path
-	$file_full_path = $file_path.$file_name;
-	
-	// picture url to write in the DB
-	$data = $cuef_upload_webpath;
-
-	if (($cimy_uef_plugins_dir == "plugins") && (is_multisite()))
-		$data.= $blog_id."/";
-
-	if (empty($user_login))
-		$data .= $type_path.$file_name;
-	else
-		$data .= $user_login."/".$type_path.$file_name;
-	
-	// filesize in Byte transformed in KiloByte
-	$file_size = $_FILES[$input_name]['size'] / 1024;
-	$file_type = $_FILES[$input_name]['type'];
-	$file_tmp_name = $_FILES[$input_name]['tmp_name'];
-	$file_error = $_FILES[$input_name]['error'];
-
-	// CHECK IF IT IS A REAL PICTURE
-	if (($type != "file") && (stristr($file_type, "image/") === false))
-		$file_error = 1;
-	
-	// MIN LENGTH
-	if (isset($rules['min_length']))
-		if ($file_size < (intval($rules['min_length'])))
-			$file_error = 1;
-	
-	// EXACT LENGTH
-	if (isset($rules['exact_length']))
-		if ($file_size != (intval($rules['exact_length'])))
-			$file_error = 1;
-
-	// MAX LENGTH
-	if (isset($rules['max_length']))
-		if ($file_size > (intval($rules['max_length'])))
-			$file_error = 1;
-
-	// if there are no errors and filename is NOT empty
-	if (($file_error == 0) && (!empty($file_name))) {
-		if (move_uploaded_file($file_tmp_name, $file_full_path)) {
-			// change file permissions for broken servers
-			if (defined("FS_CHMOD_FILE"))
-				@chmod($file_full_path, FS_CHMOD_FILE);
-			else
-				@chmod($file_full_path, 0644);
-			
-			// if there is an old file to delete
-			if ($old_file) {
-				// delete old file if the name is different, if equal NOPE because new file is already uploaded
-				if ($file_name != $old_file)
-					if (is_file($file_path.$old_file))
-						unlink($file_path.$old_file);
-				
-				$old_thumb_file = cimy_get_thumb_path($old_file);
-				
-				if (is_file($file_path.$old_thumb_file))
-					unlink($file_path.$old_thumb_file);
-			}
-			
-			// should be stay AFTER DELETIONS
-			if ((isset($rules['equal_to'])) && ($type != "file")) {
-				if ($maxside = intval($rules['equal_to'])) {
-					if (!function_exists("image_resize"))
-						require_once(ABSPATH . 'wp-includes/media.php');
-
-					if (!function_exists("wp_load_image"))
-						require_once($cuef_plugin_dir.'/cimy_uef_missing_functions.php');
-
-					image_resize($file_full_path, $maxside, $maxside, false, "thumbnail");
-				}
-			}
-		}
-		else
-			$data = "";
-	}
-	else
-		$data = "";
-
-	return $data;
-}
-
-?>

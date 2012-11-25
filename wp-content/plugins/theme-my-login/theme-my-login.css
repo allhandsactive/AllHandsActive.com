@@ -28,6 +28,15 @@
 	margin: 5px 0;
 }
 
+.profile .screen-reader-text,
+.profile .screen-reader-text span {
+	height: 1px;
+	left: -1000em;
+	overflow: hidden;
+	position: absolute;
+	width: 1px;
+}
+
 .mu_register .hint {
 	font-size: 12px;
 	margin-bottom: 10px;

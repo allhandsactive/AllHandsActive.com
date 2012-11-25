@@ -76,13 +76,15 @@ class Theme_My_Login {
 	 * @access public
 	 */
 	function __construct() {
-		$this->request_action = isset( $_REQUEST['action'] ) ? $_REQUEST['action'] : '';
-		$this->request_instance = isset( $_REQUEST['instance'] ) ? $_REQUEST['instance'] : '';
+		$this->request_action = isset( $_REQUEST['action'] ) ? sanitize_user( $_REQUEST['action'], true ) : '';
+		$this->request_instance = isset( $_REQUEST['instance'] ) ? sanitize_user( $_REQUEST['instance'], true ) : '';
 
 		$this->init_options();
 
 		// Load options again to allow modules to tap in
 		add_action( 'tml_modules_loaded', array( &$this, 'init_options' ), 0 );
+
+		add_filter( 'rewrite_rules_array', array( &$this, 'rewrite_rules_array' ) );
 
 		add_action( 'init', array( &$this, 'init' ) );
 		add_action( 'widgets_init', array( &$this, 'widgets_init' ) );
@@ -98,6 +100,8 @@ class Theme_My_Login {
 		add_filter( 'wp_setup_nav_menu_item', array( &$this, 'wp_setup_nav_menu_item' ) );
 
 		add_filter( 'site_url', array( &$this, 'site_url' ), 10, 3 );
+		add_filter( 'page_link', array( &$this, 'page_link' ), 10, 2 );
+		add_filter( 'tml_redirect_url', array( &$this, 'tml_redirect_url' ), 10, 2 );
 
 		add_filter( 'wp_list_pages_excludes', array( &$this, 'wp_list_pages_excludes' ) );
 		add_filter( 'wp_list_pages', array( &$this, 'wp_list_pages' ) );
@@ -121,9 +125,38 @@ class Theme_My_Login {
 			'page_id' => 0,
 			'show_page' => 1,
 			'enable_css' => 1,
+			'email_login' => 1,
 			'active_modules' => array(),
+			'permalinks' => array(),
 			'initial_nag' => 1
 		) ) );
+	}
+
+	/**
+	 * Handles permalink rewrite rules
+	 *
+	 * @since 6.2.2
+	 * @access public
+	 *
+	 * @param array $rules Rewrite rules
+	 * @return array Rewrite rules
+	 */
+	function rewrite_rules_array( $rules ) {
+		if ( defined( 'WP_INSTALLING' ) )
+			return $rules;
+
+		$page =& get_page( $this->options->get_option( 'page_id' ) );
+
+		$page_uri = get_page_uri( $page->ID );
+
+		$tml_rules = array();
+		foreach ( $this->options->get_option( 'permalinks', array() ) as $action => $slug ) {
+			if ( !empty( $slug ) ) {
+				$slug = str_replace( $page->post_name, $slug, $page_uri );
+				$tml_rules["{$slug}/?$"] = "index.php?page_id={$page->ID}&action={$action}";
+			}
+		}
+		return array_merge( $tml_rules, $rules );
 	}
 
 	/**
@@ -133,12 +166,16 @@ class Theme_My_Login {
 	 * @access public
 	 */
 	function init() {
+		global $wp;
+
 		load_plugin_textdomain( 'theme-my-login', '', TML_DIRNAME . '/language' );
 
 		$this->errors = new WP_Error();
 
 		if ( $this->options->get_option( 'enable_css' ) )
 			wp_enqueue_style( 'theme-my-login', Theme_My_Login::get_stylesheet(), false, $this->options->get_option( 'version' ) );
+
+		$wp->add_query_var( 'action' );
 	}
 
 	/**
@@ -181,9 +218,13 @@ class Theme_My_Login {
 	 * @since 6.0
 	 * @access public
 	 */
-	function parse_request() {
+	function parse_request( &$wp ) {
 		$errors =& $this->errors;
 		$action =& $this->request_action;
+		if ( isset( $wp->query_vars['action'] ) ) {
+			$action = $wp->query_vars['action'];
+			unset( $wp->query_vars['action'] );
+		}
 		$instance =& $this->request_instance;
 
 		if ( is_admin() )
@@ -199,22 +240,35 @@ class Theme_My_Login {
 		} else {
 			$http_post = ( 'POST' == $_SERVER['REQUEST_METHOD'] );
 			switch ( $action ) {
+				case 'postpass' :
+					global $wp_hasher;
+
+					if ( empty( $wp_hasher ) ) {
+						require_once( ABSPATH . 'wp-includes/class-phpass.php' );
+						// By default, use the portable hash from phpass
+						$wp_hasher = new PasswordHash( 8, true );
+					}
+
+					// 10 days
+					setcookie( 'wp-postpass_' . COOKIEHASH, $wp_hasher->HashPassword( stripslashes( $_POST['post_password'] ) ), time() + 864000, COOKIEPATH );
+
+					wp_safe_redirect( wp_get_referer() );
+					exit;
+
+					break;
 				case 'logout' :
 					check_admin_referer( 'log-out' );
 
 					$user = wp_get_current_user();
 
-					$redirect_to = apply_filters( 'logout_redirect', site_url( 'wp-login.php?loggedout=true' ), isset( $_REQUEST['redirect_to'] ) ? $_REQUEST['redirect_to'] : '', $user );
-
 					wp_logout();
 
+					$redirect_to = apply_filters( 'logout_redirect', site_url( 'wp-login.php?loggedout=true' ), isset( $_REQUEST['redirect_to'] ) ? $_REQUEST['redirect_to'] : '', $user );
 					wp_safe_redirect( $redirect_to );
 					exit();
 					break;
 				case 'lostpassword' :
 				case 'retrievepassword' :
-					$this->check_ssl();
-
 					if ( $http_post ) {
 						$errors = $this->retrieve_password();
 						if ( !is_wp_error( $errors ) ) {
@@ -228,14 +282,14 @@ class Theme_My_Login {
 
 					if ( isset( $_REQUEST['error'] ) && 'invalidkey' == $_REQUEST['error'] )
 						$errors->add( 'invalidkey', __( 'Sorry, that key does not appear to be valid.', 'theme-my-login' ) );
+
+					do_action( 'lost_password' );
 					break;
 				case 'resetpass' :
 				case 'rp' :
-					$this->check_ssl();
-
 					$user = $this->check_password_reset_key( $_REQUEST['key'], $_REQUEST['login'] );
 
-					if ( is_wp_error($user) ) {
+					if ( is_wp_error( $user ) ) {
 						wp_redirect( Theme_My_Login::get_current_url( 'action=lostpassword&error=invalidkey' ) );
 						exit;
 					}
@@ -243,7 +297,7 @@ class Theme_My_Login {
 					$errors = '';
 
 					if ( isset( $_POST['pass1'] ) && $_POST['pass1'] != $_POST['pass2'] ) {
-						$errors = new WP_Error( 'password_reset_mismatch', __( 'Your passwords do not match.', 'theme-my-login' ) );
+						$errors = new WP_Error( 'password_reset_mismatch', __( 'The passwords do not match.', 'theme-my-login' ) );
 					} elseif ( isset( $_POST['pass1'] ) && !empty( $_POST['pass1'] ) ) {
 						$this->reset_password( $user, $_POST['pass1'] );
 
@@ -254,19 +308,8 @@ class Theme_My_Login {
 						exit();
 					}
 
-					$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '.dev' : '';
-
-					wp_enqueue_script( 'user-profile', admin_url( "js/user-profile$suffix.js" ), array( 'jquery' ), '', true );
-					wp_enqueue_script( 'password-strength-meter', admin_url( "js/password-strength-meter$suffix.js" ), array( 'jquery' ), '', true );
-					wp_localize_script( 'password-strength-meter', 'pwsL10n', array(
-						'empty' => __( 'Strength indicator', 'theme-my-login' ),
-						'short' => __( 'Very weak', 'theme-my-login' ),
-						'bad' => __( 'Weak', 'theme-my-login' ),
-						/* translators: password strength */
-						'good' => _x( 'Medium', 'password strength', 'theme-my-login' ),
-						'strong' => __( 'Strong', 'theme-my-login' ),
-						'l10n_print_after' => 'try{convertEntities(pwsL10n);}catch(e){};'
-					) );
+					wp_enqueue_script( 'utils' );
+					wp_enqueue_script( 'user-profile' );
 					break;
 				case 'register' :
 					if ( !get_option( 'users_can_register' ) ) {
@@ -274,14 +317,9 @@ class Theme_My_Login {
 						exit();
 					}
 
-					$this->check_ssl();
-
 					$user_login = '';
 					$user_email = '';
 					if ( $http_post ) {
-						if ( version_compare( $GLOBALS['wp_version'], '3.1', '<' ) )
-							require_once( ABSPATH . WPINC . '/registration.php' );
-
 						$user_login = $_POST['user_login'];
 						$user_email = $_POST['user_email'];
 
@@ -304,7 +342,7 @@ class Theme_My_Login {
 					// If the user wants ssl but the session is not ssl, force a secure cookie.
 					if ( !empty( $_POST['log'] ) && !force_ssl_admin() ) {
 						$user_name = sanitize_user( $_POST['log'] );
-						if ( $user = get_userdatabylogin( $user_name ) ) {
+						if ( $user = get_user_by( 'login', $user_name ) ) {
 							if ( get_user_option( 'use_ssl', $user->ID ) ) {
 								$secure_cookie = true;
 								force_ssl_admin( true );
@@ -312,7 +350,7 @@ class Theme_My_Login {
 						}
 					}
 
-					if ( isset( $_REQUEST['redirect_to'] ) && !empty( $_REQUEST['redirect_to'] ) ) {
+					if ( !empty( $_REQUEST['redirect_to'] ) ) {
 						$redirect_to = $_REQUEST['redirect_to'];
 						// Redirect to https if user wants ssl
 						if ( $secure_cookie && false !== strpos( $redirect_to, 'wp-admin' ) )
@@ -330,7 +368,6 @@ class Theme_My_Login {
 						$secure_cookie = false;
 
 					if ( $http_post && isset( $_POST['log'] ) ) {
-						$this->check_ssl();
 
 						// Set a cookie now to see if they are supported by the browser.
 						setcookie( TEST_COOKIE, 'WP Cookie check', 0, COOKIEPATH, COOKIE_DOMAIN );
@@ -342,9 +379,15 @@ class Theme_My_Login {
 						$redirect_to = apply_filters( 'login_redirect', $redirect_to, isset( $_REQUEST['redirect_to'] ) ? $_REQUEST['redirect_to'] : '', $user );
 
 						if ( !is_wp_error( $user ) && !$reauth ) {
-							// If the user can't edit posts, send them to their profile.
-							if ( !$user->has_cap( 'edit_posts' ) && ( empty( $redirect_to ) || $redirect_to == 'wp-admin/' || $redirect_to == admin_url() ) )
-								$redirect_to = admin_url( 'profile.php' );
+							if ( ( empty( $redirect_to ) || $redirect_to == 'wp-admin/' || $redirect_to == admin_url() ) ) {
+								// If the user doesn't belong to a blog, send them to user admin. If the user can't edit posts, send them to their profile.
+								if ( is_multisite() && !get_active_blog_for_user( $user->ID ) && !is_super_admin( $user->ID ) )
+									$redirect_to = user_admin_url();
+								elseif ( is_multisite() && !$user->has_cap( 'read' ) )
+									$redirect_to = get_dashboard_url( $user->ID );
+								elseif ( !$user->has_cap( 'edit_posts' ) )
+									$redirect_to = admin_url( 'profile.php' );
+							}
 							wp_safe_redirect( $redirect_to );
 							exit();
 						}
@@ -363,7 +406,7 @@ class Theme_My_Login {
 						$errors->add( 'test_cookie', __( '<strong>ERROR</strong>: Cookies are blocked or not supported by your browser. You must <a href="http://www.google.com/cookies.html">enable cookies</a> to use WordPress.', 'theme-my-login' ) );
 
 					// Some parts of this script use the main login form to display a message
-					if		( isset( $_GET['loggedout'] ) && TRUE == $_GET['loggedout'] )
+					if		( isset( $_GET['loggedout'] ) && true == $_GET['loggedout'] )
 						$errors->add( 'loggedout', __( 'You are now logged out.', 'theme-my-login' ), 'message' );
 					elseif	( isset( $_GET['registration'] ) && 'disabled' == $_GET['registration'] )
 						$errors->add( 'registerdisabled', __( 'User registration is currently not allowed.', 'theme-my-login' ) );
@@ -375,6 +418,8 @@ class Theme_My_Login {
 						$errors->add( 'registered', __( 'Registration complete. Please check your e-mail.', 'theme-my-login' ), 'message' );
 					elseif	( $interim_login )
 						$errors->add( 'expired', __( 'Your session has expired. Please log-in again.', 'theme-my-login' ), 'message' );
+					elseif ( strpos( $redirect_to, 'about.php?updated' ) )
+						$errors->add('updated', __( '<strong>You have successfully updated WordPress!</strong> Please log back in to experience the awesomeness.' ), 'message' );
 					elseif	( $reauth )
 						$errors->add( 'reauth', __( 'Please log in to continue.', 'theme-my-login' ), 'message' );
 
@@ -393,7 +438,11 @@ class Theme_My_Login {
 	 * @access public
 	 */
 	function wp() {
+		global $wp_version;
+
 		if ( $this->is_login_page() ) {
+			do_action( 'login_init' );
+
 			remove_action( 'wp_head', 'feed_links', 2 );
 			remove_action( 'wp_head', 'feed_links_extra', 3 );
 			remove_action( 'wp_head', 'rsd_link' );
@@ -403,25 +452,22 @@ class Theme_My_Login {
 			remove_action( 'wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0 );
 			remove_action( 'wp_head', 'rel_canonical' );
 
-			add_filter( 'pre_option_blog_public', '__return_zero' );
-			add_action( 'login_head', 'noindex' );
-		}
-	}
-
-	/*
-	 * Redirects to https login if forced to use SSL
-	 *
-	 * @since 6.1.1
-	 * @access public
-	 */
-	function check_ssl() {
-		if ( force_ssl_admin() && !is_ssl() ) {
-			if ( 0 === strpos( $_SERVER['REQUEST_URI'], 'http' ) ) {
-				wp_redirect( preg_replace( '|^http://|', 'https://', $_SERVER['REQUEST_URI'] ) );
-				exit();
+			// Don't index any of these forms
+			if ( version_compare( $wp_version, '3.3', '<' ) ) {
+				add_filter( 'pre_option_blog_public', '__return_zero' );
+				add_action( 'login_head', 'noindex' );
 			} else {
-				wp_redirect( 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
-				exit();
+				add_action( 'login_head', 'wp_no_robots' );
+			}
+
+			if ( force_ssl_admin() && !is_ssl() ) {
+				if ( 0 === strpos( $_SERVER['REQUEST_URI'], 'http' ) ) {
+					wp_redirect( preg_replace( '|^http://|', 'https://', $_SERVER['REQUEST_URI'] ) );
+					exit();
+				} else {
+					wp_redirect( 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
+					exit();
+				}
 			}
 		}
 	}
@@ -433,16 +479,86 @@ class Theme_My_Login {
 	 * @access public
 	 *
 	 * @param string|array $query Optional. Query arguments to add to link
-	 * @param bool $remove_filter True to remove "page_link" filter
 	 * @return string Login page link with optional $query arguments appended
 	 */
 	function get_login_page_link( $query = '' ) {
-		$link = get_page_link( $this->options->get_option( 'page_id' ) );
-		if ( !empty( $query ) ) {
-			$q = wp_parse_args( $query );
-			$link = add_query_arg( $q, $link );
+		global $wp_rewrite;
+
+		$q = wp_parse_args( $query );
+
+		$page = get_page( $this->options->get_option( 'page_id' ) );
+
+		$link = $wp_rewrite->get_page_permastruct();
+		if ( !empty( $link ) ) {
+			$link = str_replace( '%pagename%', get_page_uri( $page->ID ), $link );
+			$action = isset( $q['action'] ) ? $q['action'] : 'login';
+			if ( $slug = $this->options->get_option( array( 'permalinks', $action ) ) ) {
+				$link = str_replace( $page->post_name, $slug, $link );
+				unset( $q['action'] );
+			}
+			$link = home_url( $link );
+			$link = user_trailingslashit( $link, 'page' );
+		} else {
+			$link = home_url( "?page_id={$page->ID}" );
 		}
+
+		if ( !empty( $q ) )
+			$link = add_query_arg( $q, $link );
+
 		return apply_filters( 'tml_page_link', $link, $query );
+	}
+
+	/**
+	 * Changes login page link to custom permalink
+	 *
+	 * Callback for "page_link" filter in get_page_link()
+	 *
+	 * @see get_page_link()
+	 * @since 6.2
+	 * @access public
+	 *
+	 * @param string $link Page link
+	 * @param int $id Page ID
+	 * @return string Page link
+	 */
+	function page_link( $link, $id ) {
+		if ( $this->is_login_page( $id ) )
+			return $this->get_login_page_link();
+		return $link;
+	}
+
+	/**
+	 * Changes redirect URL to login page permalink for specific actions
+	 *
+	 * Callback for "tml_redirect_url" filter in Theme_My_Login_Template::get_redirect_url()
+	 *
+	 * @since 6.2
+	 * @access public
+	 *
+	 * @param string $url Redirect URL
+	 * @param string $action Requested action
+	 * @return string Redirect URL
+	 */
+	function tml_redirect_url( $url, $action ) {
+		global $wp_rewrite;
+
+		if ( $wp_rewrite->using_permalinks() && $this->is_login_page() && $this->request_action == $action ) {
+			if ( $slug = $this->options->get_option( 'permalinks', $action ) ) {
+				switch ( $action ) {
+					case 'lostpassword' :
+					case 'retrievepassword' :
+					case 'register' :
+						$permalink = $this->get_login_page_link();
+
+						$parsed_permalink = parse_url( $permalink );
+						$parsed_url = parse_url( $url );
+
+						$url = str_replace( $parsed_url['path'], $parsed_permalink['path'], $url );
+						break;
+				}
+			}
+		}
+		return $url;
 	}
 
 	/**
@@ -560,6 +676,7 @@ class Theme_My_Login {
 	 * - login_template - The template used for the login form. Defaults to "login-form.php".
 	 * - register_template - The template used for the register form. Defaults to "register-form.php".
 	 * - lostpassword_template - The template used for the lost password form. Defaults to "lostpassword-form.php".
+	 * - resetpass_template - The template used for the reset password form. Defaults to "resetpass-form.php".
 	 * - user_template - The templated used for when a user is logged in. Defalts to "user-panel.php".
 	 * - show_title - True to display the current title, false to hide. Defaults to true.
 	 * - show_log_link - True to display the login link, false to hide. Defaults to true.
@@ -570,10 +687,6 @@ class Theme_My_Login {
 	 * - logged_in_widget - True to display the widget when logged in, false to hide. Defaults to true.
 	 * - show_gravatar - True to display the user's gravatar, false to hide. Defaults to true.
 	 * - gravatar_size - The size of the user's gravatar. Defaults to "50".
-	 * - before_widget - Content to display before widget. Defaults to "<li>".
-	 * - after_widget - Content to display after widget. Defaults to "</li>".
-	 * - before_title - Content to display before the title (if displayed). Defaults to "<h2>".
-	 * - after_title - Content to display after the title (if displayed). Defaults to "</h2>".
 	 *
 	 * @since 6.0
 	 * @access public
@@ -586,10 +699,9 @@ class Theme_My_Login {
 		if ( $this->is_login_page() && in_the_loop() ) {
 			$atts['instance'] = '';
 			$atts['show_title'] = false;
-			$atts['before_widget'] = '';
-			$atts['after_widget'] = '';
 		} else {
-			$atts['instance'] = $this->get_new_instance();
+			if ( !isset( $atts['instance'] ) )
+				$atts['instance'] = $this->get_new_instance();
 		}
 
 		$template =& new Theme_My_Login_Template( $atts );
@@ -690,7 +802,7 @@ class Theme_My_Login {
 	 * @access public
 	 */
 	function print_footer_scripts() {
-		if ( is_admin() )
+		if ( !$this->is_login_page() )
 			return;
 
 		$action = empty( $this->request_action ) ? 'login' : $this->request_action;
@@ -741,8 +853,10 @@ if(typeof wpOnload=='function')wpOnload()
 	 * @access public
 	 */
 	function login_head() {
-		if ( $this->is_login_page() )
+		if ( $this->is_login_page() ) {
+			do_action( 'login_enqueue_scripts' );
 			do_action( 'login_head' );
+		}
 	}
 
 	/**
@@ -824,7 +938,7 @@ if(typeof wpOnload=='function')wpOnload()
 	 */
 	function wp_authenticate( &$user_login ) {
 		global $wpdb;
-		if ( is_email( $user_login ) ) {
+		if ( is_email( $user_login ) && $this->options->get_option( 'email_login' ) ) {
 			if ( $found = $wpdb->get_var( $wpdb->prepare( "SELECT user_login FROM $wpdb->users WHERE user_email = %s", $user_login ) ) )
 				$user_login = $found;
 		}
@@ -841,20 +955,19 @@ if(typeof wpOnload=='function')wpOnload()
 	 * @return bool|WP_Error True: when finish. WP_Error on error
 	 */
 	function retrieve_password() {
-		global $wpdb;
+		global $wpdb, $current_site;
 
 		$errors = new WP_Error();
 
-		if ( empty( $_POST['user_login'] ) && empty( $_POST['user_email'] ) )
+		if ( empty( $_POST['user_login'] ) ) {
 			$errors->add( 'empty_username', __( '<strong>ERROR</strong>: Enter a username or e-mail address.', 'theme-my-login' ) );
-
-		if ( strpos( $_POST['user_login'], '@' ) ) {
+		} else if ( strpos( $_POST['user_login'], '@' ) ) {
 			$user_data = get_user_by_email( trim( $_POST['user_login'] ) );
 			if ( empty( $user_data ) )
 				$errors->add( 'invalid_email', __( '<strong>ERROR</strong>: There is no user registered with that email address.', 'theme-my-login' ) );
 		} else {
 			$login = trim( $_POST['user_login'] );
-			$user_data = get_userdatabylogin( $login );
+			$user_data = get_user_by( 'login', $login );
 		}
 
 		do_action( 'lostpassword_post' );
@@ -889,14 +1002,15 @@ if(typeof wpOnload=='function')wpOnload()
 			// Now insert the new md5 key into the db
 			$wpdb->update( $wpdb->users, array( 'user_activation_key' => $key ), array( 'user_login' => $user_login ) );
 		}
-		$message = __( 'Someone has asked to reset the password for the following site and username.', 'theme-my-login' ) . "\r\n\r\n";
-		$message .= network_site_url() . "\r\n\r\n";
+		$message = __( 'Someone requested that the password be reset for the following account:', 'theme-my-login' ) . "\r\n\r\n";
+		$message .= network_home_url( '/' ) . "\r\n\r\n";
 		$message .= sprintf( __( 'Username: %s', 'theme-my-login' ), $user_login ) . "\r\n\r\n";
-		$message .= __( 'To reset your password visit the following address, otherwise just ignore this email and nothing will happen.', 'theme-my-login' ) . "\r\n\r\n";
-		$message .= network_site_url( "wp-login.php?action=rp&key=$key&login=" . rawurlencode( $user_login ), 'login' ) . "\r\n";
+		$message .= __( 'If this was a mistake, just ignore this email and nothing will happen.', 'theme-my-login' ) . "\r\n\r\n";
+		$message .= __( 'To reset your password, visit the following address:', 'theme-my-login' ) . "\r\n\r\n";
+		$message .= '<' . network_site_url( "wp-login.php?action=rp&key=$key&login=" . rawurlencode( $user_login ), 'login' ) . ">\r\n";
 
-		if ( function_exists( 'is_multisite' ) && is_multisite() ) {
-			$blogname = $GLOBALS['current_site']->site_name;
+		if ( is_multisite() ) {
+			$blogname = $current_site->site_name;
 		} else {
 			// The blogname option is escaped with esc_html on the way into the database in sanitize_option
 			// we want to reverse this for the plain text arena of emails.
@@ -1005,7 +1119,7 @@ if(typeof wpOnload=='function')wpOnload()
 		if ( $errors->get_error_code() )
 			return $errors;
 
-		$user_pass = apply_filters( 'tml_user_registration_pass', wp_generate_password() );
+		$user_pass = apply_filters( 'tml_user_registration_pass', wp_generate_password( 12, false ) );
 		$user_id = wp_create_user( $sanitized_user_login, $user_pass, $user_email );
 		if ( !$user_id ) {
 			$errors->add( 'registerfail', sprintf( __( '<strong>ERROR</strong>: Couldn&#8217;t register you... please contact the <a href="mailto:%s">webmaster</a> !', 'theme-my-login' ), get_option( 'admin_email' ) ) );

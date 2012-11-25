@@ -1,17 +1,18 @@
 === Theme My Login ===
 Contributors: jfarthing84
-Donate link: http://www.jfarthing.com/donate
 Tags: widget, login, registration, theme, custom, log in, register, sidebar, gravatar, redirection, e-mail
-Requires at least: 3.0
-Tested up to: 3.1
-Stable tag: 6.1.4
+Requires at least: 3.1
+Tested up to: 3.4.2
+Stable tag: 6.2.3
 
 Themes the WordPress login pages according to your theme.
 
 
 == Description ==
 
-This plugin themes the WordPress login, registration and forgot password pages according to your current theme. It replaces the wp-login.php file by using a page template from your theme. Also includes a widget for sidebar login.
+This plugin themes the WordPress login, registration and forgot password pages according to your current theme.
+It creates a page to use in place of wp-login.php, using a page template from your theme.
+Also includes a widget for sidebar login.
 
 
 = Features =
@@ -35,10 +36,48 @@ This plugin themes the WordPress login, registration and forgot password pages a
 
 == Frequently Asked Questions ==
 
-Please visit http://www.jfarthing.com/docs/Theme_My_Login first and then visit http://www.jfarthing.com/support if you have any questions, concerns, suggestions or problems.
+Please visit http://www.jfarthing.com/development/theme-my-login first and then visit http://www.jfarthing.com/support if you have any questions, concerns, suggestions or problems.
 
 
 == Changelog ==
+
+= 6.2.3 =
+* Fix static front page bug
+* Remove tab indexes from forms
+
+= 6.2.2 =
+* Fix redirect loop bug
+* Add visual cues for permalinks
+* Fix iframe bug
+
+= 6.2.1 =
+* Add post password handling
+* Don't block admin when DOING_AJAX
+* Add WordPress updated message
+* Replace deprecated get_userdatabylogin with get_user_by
+
+= 6.2 =
+* Fix FORCE_SSL_ADMIN logic
+* Add tabindex to password fields
+* Fix removal of actions from "tml_new_user_registered" action in User Moderation module
+* Add %username% variable to Custom User Links module
+* Add custom permalinks to core
+* Add option to disable e-mail login
+* Fix potential XSS attack vulnerability
+* Update admin bar settings for 3.3 in Themed Profiles module
+* Update multisite templates for 3.3
+* Fix autofocus scripts to only load on login page
+* Require 3.1+
+* Fix broken login redirect logic
+* Add option to require login to view site in Security module
+* Don't change profile URL for non-themed roles in Themed Profiles module
+* Display failed login attempts to administrators on user profiles in Security module
+* Fix capability check for non-standard table prefix in User Moderation module
+* Add separate profile templates per user role in Themed Profiles module
+* Fix password recovery admin e-mail in Custom E-mail module
+* Don't show admin options when admin is blocked in Themed Profiles module
+* Treat multisite users with no role as subscribers in all modules
+* Fix multisite registration bug in Themed Profiles module
 
 = 6.1.4 =
 * Don't hijack non-related form posts

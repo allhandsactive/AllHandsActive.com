@@ -1,4 +1,4 @@
-#login .cimy_uef_input_27 {
+#login .cimy_uef_input_27, .cimy_uef_picture {
 	font-size: 24px;
 	width: 97%;
 	padding: 3px;
@@ -38,5 +38,6 @@
 	border-right-style: solid;
 	border-bottom-style: solid;
 	border-left-style: solid;
-	display:block;
+	display: block;
+	width: 93%;
 }

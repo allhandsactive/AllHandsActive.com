@@ -33,12 +33,14 @@ class Theme_My_Login_Widget extends WP_Widget {
 	 * @param array $args Display arguments including before_title, after_title, before_widget, and after_widget.
 	 * @param array $instance The settings for the particular instance of the widget
 	 */
-    function widget( $args, $instance ) {
-        if ( is_user_logged_in() && !$instance['logged_in_widget'] )
-            return;
-        $args = array_merge( $args, $instance );
-        echo $GLOBALS['theme_my_login']->shortcode( $args );
-    }
+	function widget( $args, $instance ) {
+		global $theme_my_login;
+
+		if ( is_user_logged_in() && !$instance['logged_in_widget'] )
+			return;
+		$args = array_merge( $args, $instance );
+		echo $theme_my_login->shortcode( $args );
+	}
 
 	/**
 	 * Updates the widget

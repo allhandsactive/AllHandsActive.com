@@ -26,22 +26,32 @@ class Theme_My_Login_Custom_User_Links extends Theme_My_Login_Module {
 	 * @return array New user links
 	 */
 	function get_user_links( $links = array() ) {
+		global $theme_my_login;
 
 		if ( !is_user_logged_in() )
 			return $links;
 
 		$current_user = wp_get_current_user();
+		if ( is_multisite() && empty( $current_user->roles ) ) {
+			$current_user->roles = array( 'subscriber' );
+		}
 
 		foreach( (array) $current_user->roles as $role ) {
-			if ( $GLOBALS['theme_my_login']->options->get_option( array( 'user_links', $role ) ) ) {
-				$links = $GLOBALS['theme_my_login']->options->get_option( array( 'user_links', $role ) );
+			if ( false !== $theme_my_login->options->get_option( array( 'user_links', $role ) ) ) {
+				$links = $theme_my_login->options->get_option( array( 'user_links', $role ) );
 				break;
 			}
 		}
 
-		// Allow for user_id variable in link
+		// Define and allow filtering of replacement variables
+		$replacements = apply_filters( 'tml_custom_user_links_variables', array(
+			'%user_id%' => $current_user->ID,
+			'%username%' => $current_user->user_nicename
+		) );
+
+		// Replace variables in link
 		foreach ( (array) $links as $key => $link ) {
-			$links[$key]['url'] = str_replace( '%user_id%', $current_user->ID, $link['url'] );
+			$links[$key]['url'] = str_replace( array_keys( $replacements ), array_values( $replacements ), $link['url'] );
 		}
 
 		return $links;
@@ -50,9 +60,9 @@ class Theme_My_Login_Custom_User_Links extends Theme_My_Login_Module {
 	/**
 	 * Initializes options for this module
 	 *
-	 * Callback for "tml_init_options" hook in method Theme_My_Login_Base::init_options()
+	 * Callback for "tml_init_options" hook in method Theme_My_Login::init_options()
 	 *
-	 * @see Theme_My_Login_Base::init_options()
+	 * @see Theme_My_Login::init_options()
 	 * @since 6.0
 	 * @access public
 	 *

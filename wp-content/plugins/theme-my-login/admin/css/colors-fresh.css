@@ -19,23 +19,24 @@
 .ui-tabs .ui-tabs-hide, .ui-tabs .ui-tabs-panel .ui-tabs-hide { display: none !important; }
 
 .ui-widget-content {
-	border: 1px solid #aaaaaa;
+	border: 1px solid #cfcfcf;
 	background: #ffffff;
 }
 
 .ui-widget-content .ui-widget-header {
-	border-bottom: 1px solid #aaaaaa;
-	background: #f1f1f1 url(../images/menu-bits.gif) repeat-x scroll left -379px;
-	font: normal 13px/18px Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
+	border-bottom: 1px solid #cfcfcf;
+	background: #ececec;
+	font: bold 13px sans-serif;
 }
 .ui-widget-content .ui-widget-content .ui-widget-header {
 	border-bottom: 1px solid #e5e5e5;
 	background: #f9f9f9;
-	font: normal 11px/18px "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
+	font: normal 11px sans-serif;
 }
 
 .ui-widget-content .ui-state-default {
-	border-right: 1px solid #d3d3d3;
+	border-left: 1px solid #f9f9f9;
+	border-right: 1px solid #dfdfdf;
 	background: transparent;
 	outline: none;
 }
@@ -49,8 +50,17 @@
 }
 
 .ui-widget-content .ui-state-active {
-	background: #6d6d6d url(../images/menu-bits.gif) top left repeat-x;
+	border-left: 1px solid #808080;
+	border-right: 1px solid #6d6d6d;
+	background-color: #777; /* Fallback */
+	background-image: -ms-linear-gradient(bottom, #6d6d6d, #808080); /* IE10 */
+	background-image: -moz-linear-gradient(bottom, #6d6d6d, #808080); /* Firefox */
+	background-image: -o-linear-gradient(bottom, #6d6d6d, #808080); /* Opera */
+	background-image: -webkit-gradient(linear, left bottom, left top, from(#6d6d6d), to(#808080)); /* old Webkit */
+	background-image: -webkit-linear-gradient(bottom, #6d6d6d, #808080); /* new Webkit */
+	background-image: linear-gradient(bottom, #6d6d6d, #808080); /* proposed W3C Markup */
 	outline: none;
+	text-shadow: 0 -1px 0 #333;
 }
 
 .ui-widget-content .ui-state-active a,
@@ -68,4 +78,5 @@
 	color: #212121;
 	outline: none;
 	font-weight: bold;
+	text-shadow: none;
 }

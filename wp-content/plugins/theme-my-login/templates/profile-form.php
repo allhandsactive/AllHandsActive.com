@@ -4,8 +4,10 @@ If you would like to edit this file, copy it to your current theme's directory a
 Theme My Login will always look in your theme's directory first, before using this default template.
 */
 
-$GLOBALS['current_user'] = $current_user = wp_get_current_user();
-$GLOBALS['profileuser'] = $profileuser = get_user_to_edit( $current_user->ID );
+$user_role = reset( $profileuser->roles );
+if ( is_multisite() && empty( $user_role ) ) {
+	$user_role = 'subscriber';
+}
 
 $user_can_edit = false;
 foreach ( array( 'posts', 'pages' ) as $post_cap )
@@ -22,6 +24,8 @@ foreach ( array( 'posts', 'pages' ) as $post_cap )
 			<input type="hidden" name="checkuser_id" value="<?php echo $current_user->ID; ?>" />
 		</p>
 
+		<?php if ( !$theme_my_login->options->get_option( array( 'themed_profiles', $user_role, 'restrict_admin' ) ) && !has_action( 'personal_options' ) ): ?>
+
 		<h3><?php _e( 'Personal Options', 'theme-my-login' ); ?></h3>
 
 		<table class="form-table">
@@ -31,7 +35,7 @@ foreach ( array( 'posts', 'pages' ) as $post_cap )
 			<td><label for="rich_editing"><input name="rich_editing" type="checkbox" id="rich_editing" value="false" <?php checked( 'false', $profileuser->rich_editing ); ?> /> <?php _e( 'Disable the visual editor when writing', 'theme-my-login' ); ?></label></td>
 		</tr>
 		<?php endif; ?>
-		<?php if ( count( $GLOBALS['_wp_admin_css_colors'] ) > 1 && has_action( 'admin_color_scheme_picker' ) ) : ?>
+		<?php if ( count( $_wp_admin_css_colors ) > 1 && has_action( 'admin_color_scheme_picker' ) ) : ?>
 		<tr>
 			<th scope="row"><?php _e( 'Admin Color Scheme', 'theme-my-login' )?></th>
 			<td><?php do_action( 'admin_color_scheme_picker' ); ?></td>
@@ -46,19 +50,41 @@ foreach ( array( 'posts', 'pages' ) as $post_cap )
 		<?php endif; ?>
 		<?php if ( function_exists( '_get_admin_bar_pref' ) ) : ?>
 		<tr class="show-admin-bar">
-			<th scope="row"><?php _e( 'Show Admin Bar', 'theme-my-login' )?></th>
-			<td><fieldset><legend class="screen-reader-text"><span><?php _e( 'Show Admin Bar', 'theme-my-login' ); ?></span></legend>
-				<label for="admin_bar_front">
-				<input name="admin_bar_front" type="checkbox" id="admin_bar_front" value="1" <?php checked( _get_admin_bar_pref( 'front', $profileuser->ID ) ); ?> />
-				<?php /* translators: Show admin bar when viewing site */ _e( 'when viewing site', 'theme-my-login' ); ?></label><br />
-				<label for="admin_bar_admin">
-				<input name="admin_bar_admin" type="checkbox" id="admin_bar_admin" value="1" <?php checked( _get_admin_bar_pref( 'admin', $profileuser->ID ) ); ?> />
-				<?php /* translators: Show admin bar in dashboard */ _e( 'in dashboard', 'theme-my-login' ); ?></label>
+			<?php if ( version_compare( $wp_version, '3.3', '>=' ) ) : ?>
+			<th scope="row"><?php _e( 'Toolbar', 'theme-my-login' )?></th>
+			<td>
+				<fieldset>
+					<legend class="screen-reader-text"><span><?php _e( 'Toolbar', 'theme-my-login' ) ?></span></legend>
+					<label for="admin_bar_front">
+						<input name="admin_bar_front" type="checkbox" id="admin_bar_front" value="1"<?php checked( _get_admin_bar_pref( 'front', $profileuser->ID ) ); ?> />
+						<?php _e( 'Show Toolbar when viewing site', 'theme-my-login' ); ?>
+					</label>
+					<br />
+				</fieldset>
 			</td>
+			<?php else : ?>
+			<th scope="row"><?php _e( 'Show Admin Bar', 'theme-my-login' )?></th>
+			<td>
+				<fieldset>
+					<legend class="screen-reader-text"><span><?php _e( 'Show Admin Bar', 'theme-my-login' ); ?></span></legend>
+					<label for="admin_bar_front">
+						<input name="admin_bar_front" type="checkbox" id="admin_bar_front" value="1" <?php checked( _get_admin_bar_pref( 'front', $profileuser->ID ) ); ?> />
+						<?php /* translators: Show admin bar when viewing site */ _e( 'when viewing site', 'theme-my-login' ); ?>
+					</label>
+					<br />
+					<label for="admin_bar_admin">
+						<input name="admin_bar_admin" type="checkbox" id="admin_bar_admin" value="1" <?php checked( _get_admin_bar_pref( 'admin', $profileuser->ID ) ); ?> />
+						<?php /* translators: Show admin bar in dashboard */ _e( 'in dashboard', 'theme-my-login' ); ?>
+					</label>
+				</fieldset>
+			</td>
+			<?php endif; ?>
 		</tr>
 		<?php endif; // function exists ?>
 		<?php do_action( 'personal_options', $profileuser ); ?>
 		</table>
+		<?php endif; // restrict admin ?>
+
 		<?php do_action( 'profile_personal_options', $profileuser ); ?>
 
 		<h3><?php _e( 'Name', 'theme-my-login' ) ?></h3>

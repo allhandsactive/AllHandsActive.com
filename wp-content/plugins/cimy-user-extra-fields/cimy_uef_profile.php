@@ -20,13 +20,13 @@ function cimy_extract_ExtraFields() {
 	else {
 		if (!isset($user_ID))
 			return;
-		
+
 		$get_user_id = $user_ID;
 	}
 
 	$get_user_id = intval($get_user_id);
 	$options = cimy_get_options();
-	
+
 	$extra_fields = get_cimyFields(false, true);
 
 	if (!empty($extra_fields)) {
@@ -38,29 +38,27 @@ function cimy_extract_ExtraFields() {
 			echo "<br clear=\"all\" />\n";
 			echo "<h2>".esc_html($options['extra_fields_title'])."</h2>\n";
 		}
-		
+
 		foreach ($extra_fields as $thisField) {
-	
+
 			$field_id = $thisField['ID'];
-	
+
 			cimy_insert_ExtraFields_if_not_exist($get_user_id, $field_id);
 		}
-	
+
 // 		$ef_db = $wpdb->get_results("SELECT FIELD_ID, VALUE FROM ".$wpdb_data_table." WHERE USER_ID = ".$get_user_id, ARRAY_A);
 
 		$radio_checked = array();
-		$upload_file_function = false;
-		$crop_image_function = false;
 		$current_fieldset = -1;
 		$tiny_mce_objects = "";
-		
+
 		if (!empty($options['fieldset_title']))
 			$fieldset_titles = explode(',', $options['fieldset_title']);
 		else
 			$fieldset_titles = array();
-		
+
 		$close_table = false;
-		
+
 		echo '<table class="form-table">';
 		echo "\n";
 
@@ -74,6 +72,7 @@ function cimy_extract_ExtraFields() {
 			$label = $thisField['LABEL'];
 			$description = cimy_uef_sanitize_content($thisField['DESCRIPTION']);
 			$fieldset = $thisField['FIELDSET'];
+			$unique_id = $fields_name_prefix.$field_id;
 			$input_name = $fields_name_prefix.esc_attr($name);
 			$field_id_data = $input_name."_".$field_id."_data";
 			$advanced_options = cimy_uef_parse_advanced_options($rules["advanced_options"]);
@@ -122,7 +121,7 @@ function cimy_extract_ExtraFields() {
 
 				if (isset($fieldset_titles[$current_fieldset]))
 					echo "\n\t<h3>".esc_html($fieldset_titles[$current_fieldset])."</h3>\n";
-				
+
 				echo '<table class="form-table">';
 				echo "\n";
 			}
@@ -136,14 +135,18 @@ function cimy_extract_ExtraFields() {
 			$value = esc_attr($value);
 			$old_value = esc_attr($old_value);
 			$obj_class = '';
+			if ($rules['can_be_empty'])
+				$required = '' ;
+			else
+				$required = ' <span class="description">'.__("(required)").'</span>' ;
 
 			switch($type) {
 				case "picture-url":
 				case "password":
 				case "text":
-					$obj_label = '<label for="'.$fields_name_prefix.$field_id.'">'.cimy_uef_sanitize_content($label).'</label>';
+					$obj_label = '<label for="'.$unique_id.'">'.cimy_uef_sanitize_content($label).$required.'</label>';
 					$obj_name = ' name="'.$input_name.'"';
-					
+
 					if ($type == "picture-url")
 						$obj_type = ' type="text"';
 					else
@@ -155,16 +158,16 @@ function cimy_extract_ExtraFields() {
 					$obj_tag = "input";
 					$obj_closing_tag = false;
 					$obj_style = ' class="regular-text"';
-					
+
 					if (cimy_uef_is_field_disabled($type, $rules['edit'], $old_value))
 						$obj_disabled = ' disabled="disabled"';
 					else
 						$obj_disabled = "";
-						
+
 					break;
-					
+
 				case "textarea":
-					$obj_label = '<label for="'.$fields_name_prefix.$field_id.'">'.cimy_uef_sanitize_content($label).'</label>';
+					$obj_label = '<label for="'.$unique_id.'">'.cimy_uef_sanitize_content($label).$required.'</label>';
 					$obj_name = ' name="'.$input_name.'"';
 					$obj_type = "";
 					$obj_value = "";
@@ -181,14 +184,14 @@ function cimy_extract_ExtraFields() {
 						$obj_disabled = "";
 
 					break;
-					
+
 				case "textarea-rich":
 					if ($tiny_mce_objects == "")
-						$tiny_mce_objects = $fields_name_prefix.$field_id;
+						$tiny_mce_objects = $unique_id;
 					else
-						$tiny_mce_objects .= ",".$fields_name_prefix.$field_id;
+						$tiny_mce_objects .= ",".$unique_id;
 
-					$obj_label = '<label for="'.$fields_name_prefix.$field_id.'">'.cimy_uef_sanitize_content($label).'</label>';
+					$obj_label = '<label for="'.$unique_id.'">'.cimy_uef_sanitize_content($label).$required.'</label>';
 					$obj_name = ' name="'.$input_name.'"';
 					$obj_type = "";
 					$obj_value = "";
@@ -211,9 +214,7 @@ function cimy_extract_ExtraFields() {
 					$ret = cimy_dropDownOptions($label, $non_escaped_value);
 					$label = $ret['label'];
 					$html = $ret['html'];
-					
-					$obj_label = '<label for="'.$fields_name_prefix.$field_id.'">'.$label.'</label>';
-					
+					$obj_label = '<label for="'.$unique_id.'">'.$label.$required.'</label>';
 
 					if ($type == "dropdown-multi") {
 						$obj_name = ' name="'.$input_name.'[]" multiple="multiple" size="5"';
@@ -230,16 +231,16 @@ function cimy_extract_ExtraFields() {
 					$obj_checked = "";
 					$obj_tag = "select";
 					$obj_closing_tag = true;
-				
+
 					if (cimy_uef_is_field_disabled($type, $rules['edit'], $old_value))
 						$obj_disabled = ' disabled="disabled"';
 					else
 						$obj_disabled = "";
-					
+
 					break;
-					
+
 				case "checkbox":
-					$obj_label = '<label for="'.$fields_name_prefix.$field_id.'">'.cimy_uef_sanitize_content($label).'</label>';
+					$obj_label = '<label for="'.$unique_id.'">'.cimy_uef_sanitize_content($label).'</label>';
 					$obj_name = ' name="'.$input_name.'"';
 					$obj_type = ' type="'.$type.'"';
 					$obj_value = ' value="1"';
@@ -248,16 +249,16 @@ function cimy_extract_ExtraFields() {
 					$obj_tag = "input";
 					$obj_closing_tag = false;
 					$obj_style = ' style="width:auto; border:0; background:white;"';
-					
+
 					if (cimy_uef_is_field_disabled($type, $rules['edit'], $old_value))
 						$obj_disabled = ' disabled="disabled"';
 					else
 						$obj_disabled = "";
 
 					break;
-	
+
 				case "radio":
-					$obj_label = '<label for="'.$fields_name_prefix.$field_id.'"> '.cimy_uef_sanitize_content($label).'</label>';
+					$obj_label = '<label for="'.$unique_id.'"> '.cimy_uef_sanitize_content($label).'</label>';
 					$obj_name = ' name="'.$input_name.'"';
 					$obj_type = ' type="'.$type.'"';
 					$obj_value = ' value="'.$field_id.'"';
@@ -282,16 +283,13 @@ function cimy_extract_ExtraFields() {
 
 				case "avatar":
 				case "picture":
-					$crop_image_function = true;
 				case "file":
 					$allowed_exts = '';
 					if (isset($rules['equal_to']))
 						if (!empty($rules['equal_to']))
 							$allowed_exts = "'".implode("', '", explode(",", $rules['equal_to']))."'";
 
-					// javascript will be added later
-					$upload_file_function = true;
-					$obj_label = '<label for="'.$fields_name_prefix.$field_id.'">'.cimy_uef_sanitize_content($label).'</label>';
+					$obj_label = '<label for="'.$unique_id.'">'.cimy_uef_sanitize_content($label).$required.'</label>';
 					$obj_class = '';
 					$obj_name = ' name="'.$input_name.'"';
 					$obj_type = ' type="file"';
@@ -305,36 +303,36 @@ function cimy_extract_ExtraFields() {
 						// if we do not escape then some translations can break
 						$warning_msg = $wpdb->escape(__("Please upload a file with one of the following extensions", $cimy_uef_domain));
 
-						$obj_style = ' onchange="uploadFile(\'your-profile\', \''.$fields_name_prefix.$field_id.'\', \''.$warning_msg.'\', Array('.$allowed_exts.'));"';
+						$obj_style = ' onchange="uploadFile(\'your-profile\', \''.$unique_id.'\', \''.$warning_msg.'\', Array('.$allowed_exts.'));"';
 					}
 					else {
 						// if we do not escape then some translations can break
 						$warning_msg = $wpdb->escape(__("Please upload an image with one of the following extensions", $cimy_uef_domain));
-
-						$obj_style = ' onchange="uploadFile(\'your-profile\', \''.$fields_name_prefix.$field_id.'\', \''.$warning_msg.'\', Array(\'gif\', \'png\', \'jpg\', \'jpeg\', \'tiff\'));"';
+						$allowed_exts = "'".implode("','", cimy_uef_get_allowed_image_extensions())."'";
+						$obj_style = ' onchange="uploadFile(\'your-profile\', \''.$unique_id.'\', \''.$warning_msg.'\', Array('.$allowed_exts.'));"';
 					}
-					
+
 					if (cimy_uef_is_field_disabled($type, $rules['edit'], $old_value))
 						$obj_disabled = ' disabled="disabled"';
 					else
 						$obj_disabled = "";
-					
+
 					break;
-					
+
 				case "registration-date":
 					$value = cimy_get_registration_date($get_user_id, $value);
 					if (isset($rules['equal_to']))
 						$obj_value = cimy_get_formatted_date($value, $rules['equal_to']);
 					else
 						$obj_value = cimy_get_formatted_date($value);
-				
+
 					$obj_label = '<label>'.cimy_uef_sanitize_content($label).'</label>';
 
 					break;
 			}
 
-			
-			$obj_id = ' id="'.$fields_name_prefix.$field_id.'"';
+
+			$obj_id = ' id="'.$unique_id.'"';
 			$obj_maxlen = "";
 
 			if ((in_array($type, $rule_maxlen_needed)) && (!in_array($type, $cimy_uef_file_types))) {
@@ -344,16 +342,16 @@ function cimy_extract_ExtraFields() {
 					$obj_maxlen = ' maxlength="'.$rules['exact_length'].'"';
 				}
 			}
-			
+
 			if (in_array($type, $cimy_uef_textarea_types))
 				$obj_rowscols = ' rows="3" cols="25"';
 			else
 				$obj_rowscols = '';
-	
+
 			echo "\t";
-			
+
 			$form_object = '<'.$obj_tag.$obj_id.$obj_class.$obj_name.$obj_type.$obj_value.$obj_checked.$obj_maxlen.$obj_rowscols.$obj_style.$obj_disabled;
-			
+
 			if ($obj_closing_tag)
 				$form_object.= ">".$obj_value2."</".$obj_tag.">";
 			else
@@ -362,11 +360,11 @@ function cimy_extract_ExtraFields() {
 			echo "<th>";
 			echo $obj_label;
 			echo "</th>\n";
-			
+
 			echo "\t\t<td>";
-			
+
 			if ((!empty($description)) && (($type == "picture") || ($type == "picture-url")))
-				echo $description."<br />";
+				echo "<span class='description'>".$description."</span><br />";
 
 			if (in_array($type, $cimy_uef_file_types)) {
 				$profileuser = get_user_to_edit($get_user_id);
@@ -382,14 +380,14 @@ function cimy_extract_ExtraFields() {
 			if ((in_array($type, $cimy_uef_file_types)) && (!empty($value))) {
 				$old_value = basename($old_value);
 				$user_login = $profileuser->user_login;
-				
+
 				if ($type == "picture") {
 					$value_thumb = cimy_get_thumb_path($value);
 					$file_on_server = cimy_uef_get_dir_or_filename($user_login, $value, false);
 					$file_thumb = cimy_uef_get_dir_or_filename($user_login, $value, true);
 					if ((!empty($advanced_options["no-thumb"])) && (is_file($file_thumb)))
 						rename($file_thumb, $file_on_server);
-					
+
 					echo "\n\t\t";
 					if (is_file($file_thumb)) {
 						echo '<a target="_blank" href="'.$value.'"><img id="'.$field_id_data.'" src="'.$value_thumb.'" alt="picture" /></a><br />';
@@ -416,12 +414,12 @@ function cimy_extract_ExtraFields() {
 				else {
 					// take the "can be modified" rule just set before
 					$dis_delete_img = $obj_disabled;
-					
+
 // 					echo '<input type="hidden" name="'.$input_name.'_oldfile" value="'.basename($value).'" />';
 // 					echo "\n\t\t";
 				}
 
-				if ((($type == "picture") || ($type == "avatar")) && ((empty($rules["equal_to"])) || ($advanced_options["no-thumb"]))) {
+				if ((($type == "picture") || ($type == "avatar")) && ((empty($rules["equal_to"])) || (!empty($advanced_options["no-thumb"])))) {
 					echo "<input type=\"hidden\" name=\"".$field_id_data."_x1\" id=\"".$field_id_data."_x1\" value=\"\" />";
 					echo "<input type=\"hidden\" name=\"".$field_id_data."_y1\" id=\"".$field_id_data."_y1\" value=\"\" />";
 					echo "<input type=\"hidden\" name=\"".$field_id_data."_x2\" id=\"".$field_id_data."_x2\" value=\"\" />";
@@ -456,7 +454,7 @@ function cimy_extract_ExtraFields() {
 				}
 				echo "\n\t\t";
 			}
-			
+
 			if ($type == "picture-url") {
 				if (!empty($value)) {
 					if (intval($rules['equal_to'])) {
@@ -467,49 +465,56 @@ function cimy_extract_ExtraFields() {
 					else {
 						echo '<img src="'.$value.'" alt="picture" />';
 					}
-					
+
 					echo "<br />";
 					echo "\n\t\t";
 				}
-				
+
 				echo "<br />".__("Picture URL:", $cimy_uef_domain)."<br />\n\t\t";
 			}
 
 			// write previous value
 			echo "<input type=\"hidden\" name=\"".$input_name."_".$field_id."_prev_value\" value=\"".$old_value."\" />\n\t\t";
+
+			// TinceMCE needed and we have WordPress >= 3.3 yummy!
+			if ($type == "textarea-rich" && function_exists("wp_editor")) {
+				$quicktags_settings = array( 'buttons' => 'strong,em,link,block,del,ins,img,ul,ol,li,code,spell,close' );
+				$editor_settings = array(
+					'textarea_name' => $input_name,
+					'teeny' => false,
+					'textarea_rows' => '10',
+					'dfw' => false,
+					'media_buttons' => true,
+					'tinymce' => true,
+					'quicktags' => $quicktags_settings,
+				);
+				wp_editor($non_escaped_value, $unique_id, $editor_settings);
+			}
 			// write to the html the form object built
-			if ($type != "registration-date")
+			else if ($type != "registration-date")
 				echo $form_object;
 			else
 				echo $obj_value;
-			
+
 			if ((!empty($description)) && ($type != "picture") && ($type != "picture-url")) {
 				if (($type == "textarea") || ($type == "textarea-rich"))
 					echo "<br />";
 				else
 					echo " ";
-					
-				echo $description;
+
+				echo "<span class='description'>".$description."</span>" ;
 			}
 
 			echo "</td>";
 			echo "\n\t</tr>\n";
 		}
-		
+
 		echo "</table>";
-		
-		if (!empty($tiny_mce_objects)) {
+
+		// WP 3.2 or lower (N)
+		if (!empty($tiny_mce_objects) && !function_exists("wp_editor")) {
 			require_once($cuef_plugin_dir.'/cimy_uef_init_mce.php');
 		}
-		if ($crop_image_function) {
-			wp_print_scripts('imgareaselect');
-			wp_print_styles('imgareaselect');
-			wp_print_scripts('cimy_uef_img_selection');
-		}
-
-		if ($upload_file_function)
-			wp_print_scripts("cimy_uef_upload_file");
-		
 		echo $end_cimy_uef_comment;
 	}
 }
@@ -523,7 +528,7 @@ function cimy_update_ExtraFields() {
 
 	if (isset($_POST['user_id'])) {
 		$get_user_id = $_POST['user_id'];
-		
+
 		if (!current_user_can('edit_user', $get_user_id))
 			return;
 	}
@@ -548,7 +553,8 @@ function cimy_update_ExtraFields() {
 		$type = $thisField["TYPE"];
 		$label = $thisField["LABEL"];
 		$rules = $thisField["RULES"];
-		$input_name = $fields_name_prefix.$wpdb->escape($name);
+		$unique_id = $fields_name_prefix.$field_id;
+		$input_name = $fields_name_prefix.esc_attr($name);
 		$field_id_data = $input_name."_".$field_id."_data";
 		$advanced_options = cimy_uef_parse_advanced_options($rules["advanced_options"]);
 
@@ -599,7 +605,7 @@ function cimy_update_ExtraFields() {
 			$field_ids.= $field_id;
 
 			$query.= " WHEN ".$field_id." THEN ";
-	
+
 			switch ($type) {
 				case 'dropdown':
 				case 'dropdown-multi':
@@ -642,12 +648,12 @@ function cimy_update_ExtraFields() {
 					$delete_file = true;
 				else
 					$delete_file = false;
-				
+
 				if (isset($_POST[$input_name."_".$field_id."_prev_value"]))
 					$old_file = stripslashes($_POST[$input_name."_".$field_id."_prev_value"]);
 				else
 					$old_file = false;
-				
+
 				$field_value = cimy_manage_upload($input_name, $user_login, $rules, $old_file, $delete_file, $type, (!empty($advanced_options["filename"])) ? $advanced_options["filename"] : "");
 
 				if ((!empty($field_value)) || ($delete_file)) {
@@ -655,9 +661,9 @@ function cimy_update_ExtraFields() {
 						$field_ids.= ", ";
 					else
 						$i = 1;
-			
+
 					$field_ids.= $field_id;
-					
+
 					$value = "'".$field_value."'";
 					$prev_value = "'".$prev_value."'";
 
@@ -732,5 +738,3 @@ function cimy_update_ExtraFields() {
 		wp_mail($admin_email, $mail_subject, $mail_changes);
 	}
 }
-
-?>

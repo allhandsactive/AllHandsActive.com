@@ -43,7 +43,13 @@ div.tml-options-user-links div.ajax-response {
 
 .tml-options-user-links thead th {
 	padding: 5px 8px 8px;
-	background-color: #f1f1f1;
+	background-color: #ececec;
+	border-bottom: 1px solid #cfcfcf;
+}
+
+.admin-color-classic .tml-options-user-links thead th {
+	background-color: #eaf3fa;
+	border-bottom: 1px solid #d0dfe9;
 }
 
 .tml-options-user-links .submit {
@@ -59,8 +65,12 @@ div.tml-options-user-links div.ajax-response {
 	border-width: 1px;
 	border-style: solid;
 	border-spacing: 0;
-	border-color: #dfdfdf;
+	border-color: #cfcfcf;
 	background-color: #f9f9f9;
+}
+
+.admin-color-classic .tml-options-user-links table {
+	border-color: #d0dfe9;
 }
 
 .tml-options-user-links table input,

@@ -92,16 +92,18 @@ class Theme_My_Login_User_Moderation_Admin extends Theme_My_Login_Module {
 	 * @return array The filtered user actions
 	 */
 	function user_row_actions( $actions, $user_object ) {
+		global $theme_my_login;
+
 		$current_user = wp_get_current_user();
 		if ( $current_user->ID != $user_object->ID ) {
 			if ( in_array( 'pending', (array) $user_object->roles ) ) {
 				$_actions = array();
 				// If moderation type is e-mail activation, add "Resend Activation" link
-				if ( 'email' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) ) {
+				if ( 'email' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) ) {
 					$_actions['resend-activation'] = '<a href="' . add_query_arg( 'wp_http_referer',
 						urlencode( esc_url( stripslashes( $_SERVER['REQUEST_URI'] ) ) ),
 						wp_nonce_url( "users.php?action=resendactivation&amp;user=$user_object->ID", 'resend-activation' ) ) . '">' . __( 'Resend Activation', 'theme-my-login' ) . '</a>';
-				} elseif ( 'admin' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) ) {
+				} elseif ( 'admin' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) ) {
 					// Add "Approve" link
 					$_actions['approve-user'] = '<a href="' . add_query_arg( 'wp_http_referer',
 						urlencode( esc_url( stripslashes( $_SERVER['REQUEST_URI'] ) ) ),
@@ -120,7 +122,7 @@ class Theme_My_Login_User_Moderation_Admin extends Theme_My_Login_Module {
 	 * @return bool Returns false if not a valid user
 	 */
 	function approve_user( $user_id ) {
-		global $wpdb;
+		global $wpdb, $current_site;
 
 		$user_id = (int) $user_id;
 
@@ -150,8 +152,8 @@ class Theme_My_Login_User_Moderation_Admin extends Theme_My_Login_Module {
 		// Delete plaintext pass
 		delete_user_meta( $user->ID, 'user_pass' );
 
-		if ( function_exists( 'is_multisite' ) && is_multisite() ) {
-			$blogname = $GLOBALS['current_site']->site_name;
+		if ( is_multisite() ) {
+			$blogname = $current_site->site_name;
 		} else {
 			// The blogname option is escaped with esc_html on the way into the database in sanitize_option
 			// we want to reverse this for the plain text arena of emails.
@@ -180,6 +182,7 @@ class Theme_My_Login_User_Moderation_Admin extends Theme_My_Login_Module {
 	 * @param string $user_id User's ID
 	 */
 	function deny_user( $user_id ) {
+		global $current_site;
 
 		$user_id = (int) $user_id;
 
@@ -189,8 +192,8 @@ class Theme_My_Login_User_Moderation_Admin extends Theme_My_Login_Module {
 
 		do_action( 'deny_user', $user->ID );
 
-		if ( function_exists( 'is_multisite' ) && is_multisite() ) {
-			$blogname = $GLOBALS['current_site']->site_name;
+		if ( is_multisite() ) {
+			$blogname = $current_site->site_name;
 		} else {
 			// The blogname option is escaped with esc_html on the way into the database in sanitize_option
 			// we want to reverse this for the plain text arena of emails.
@@ -233,17 +236,18 @@ class Theme_My_Login_User_Moderation_Admin extends Theme_My_Login_Module {
 	 * @access public
 	 */
 	function display_settings() {
-?><table class="form-table">
+		global $theme_my_login; ?>
+<table class="form-table">
 	<tr valign="top">
 		<th scope="row"><?php _e( 'User Moderation', 'theme-my-login' ); ?></th>
 		<td>
-			<input name="theme_my_login[moderation][type]" type="radio" id="theme_my_login_moderation_type_none" value="none" <?php if ( 'none' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) ) echo 'checked="checked"'; ?> />
+			<input name="theme_my_login[moderation][type]" type="radio" id="theme_my_login_moderation_type_none" value="none" <?php if ( 'none' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) ) echo 'checked="checked"'; ?> />
 			<label for="theme_my_login_moderation_type_none"><?php _e( 'None', 'theme-my-login' ); ?></label>
 			<p class="description"><?php _e( 'Check this option to require no moderation.', 'theme-my-login' ); ?></p>
-			<input name="theme_my_login[moderation][type]" type="radio" id="theme_my_login_moderation_type_email" value="email" <?php if ( 'email' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) ) echo 'checked="checked"'; ?> />
+			<input name="theme_my_login[moderation][type]" type="radio" id="theme_my_login_moderation_type_email" value="email" <?php if ( 'email' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) ) echo 'checked="checked"'; ?> />
 			<label for="theme_my_login_moderation_type_email"><?php _e( 'E-mail Confirmation', 'theme-my-login' ); ?></label>
 			<p class="description"><?php _e( 'Check this option to require new users to confirm their e-mail address before they may log in.', 'theme-my-login' ); ?></p>
-			<input name="theme_my_login[moderation][type]" type="radio" id="theme_my_login_moderation_type_admin" value="admin" <?php if ( 'admin' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) ) echo 'checked="checked"'; ?> />
+			<input name="theme_my_login[moderation][type]" type="radio" id="theme_my_login_moderation_type_admin" value="admin" <?php if ( 'admin' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) ) echo 'checked="checked"'; ?> />
 			<label for="theme_my_login_moderation_type_admin"><?php _e( 'Admin Approval', 'theme-my-login' ); ?></label>
 			<p class="description"><?php _e( 'Check this option to require new users to be approved by an administrator before they may log in.', 'theme-my-login' ); ?></p>
 		</td>
@@ -252,16 +256,18 @@ class Theme_My_Login_User_Moderation_Admin extends Theme_My_Login_Module {
 	}
 
 	function admin_init() {
+		global $theme_my_login, $theme_my_login_admin;
+
 		// Disable moderation if using multisite
-		if ( function_exists( 'is_multisite' ) && is_multisite() ) {
-			if ( $GLOBALS['theme_my_login']->is_module_active( 'user-moderation/user-moderation.php' ) ) {
+		if ( is_multisite() ) {
+			if ( $theme_my_login->is_module_active( 'user-moderation/user-moderation.php' ) ) {
 				// Deactivate the module
-				$GLOBALS['theme_my_login_admin']->deactivate_modules( 'user-moderation/user-moderation.php' );
+				$theme_my_login_admin->deactivate_modules( 'user-moderation/user-moderation.php' );
 
 				// Set an error so the administrator will know
-				$module_errors = $GLOBALS['theme_my_login']->options->get_option( 'module_errors', array() );
+				$module_errors = $theme_my_login->options->get_option( 'module_errors', array() );
 				$module_errors['user-moderation/user-moderation.php'] = __( 'User Moderation is not currently compatible with multisite.', 'theme-my-login' );
-				$GLOBALS['theme_my_login']->options->set_option( 'module_errors', $module_errors );
+				$theme_my_login->options->set_option( 'module_errors', $module_errors );
 			}
 		}
 	}
@@ -294,7 +300,7 @@ class Theme_My_Login_User_Moderation_Admin extends Theme_My_Login_Module {
 	function load() {
 		add_action( 'tml_activate_user-moderaiton/user-moderation.php', array( &$this, 'activate' ) );
 		add_action( 'admin_init', array( &$this, 'admin_init' ) );
-		if ( function_exists( 'is_multisite' ) && is_multisite() )
+		if ( is_multisite() )
 			return;
 		add_action( 'tml_admin_menu', array( &$this, 'admin_menu' ) );
 		add_action( 'load-users.php', array( &$this, 'load_users_page' ) );

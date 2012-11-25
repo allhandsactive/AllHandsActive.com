@@ -20,8 +20,17 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	 * @access public
 	 */
 	function register_post() {
-		// Remove all other filters
-		remove_all_actions( 'tml_new_user_registered' );
+		global $theme_my_login, $theme_my_login_custom_email;
+
+		// Remove default new user notification
+		if ( has_action( 'tml_new_user_registered', 'wp_new_user_notification' ) )
+			remove_action( 'tml_new_user_registered', 'wp_new_user_notification', 10, 2 );
+
+		// Remove Custom Email new user notification
+		if ( $theme_my_login->is_module_active( 'custom-email/custom-email.php' ) ) {
+			if ( has_action( 'tml_new_user_registered', array( &$theme_my_login_custom_email, 'new_user_notification' ) ) )
+				remove_action( 'tml_new_user_registered', array( &$theme_my_login_custom_email, 'new_user_notification' ), 10, 2 );
+		}
 
 		// Moderate user upon registration
 		add_action( 'tml_new_user_registered', array( &$this, 'moderate_user' ), 100, 2 );
@@ -40,7 +49,7 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	 * @param string $user_pass The user's password
 	 */
 	function moderate_user( $user_id, $user_pass ) {
-		global $wpdb;
+		global $theme_my_login, $wpdb;
 
 		// Set user role to "pending"
 		$user = new WP_User( $user_id );
@@ -51,14 +60,14 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 			update_user_meta( $user_id, 'user_pass', $_POST['user_pass'] );
 
 		// Send appropriate e-mail depending on moderation type
-		if ( 'email' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) ) { // User activation
+		if ( 'email' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) ) { // User activation
 			// Generate an activation key
 			$key = wp_generate_password( 20, false );
 			// Set the activation key for the user
 			$wpdb->update( $wpdb->users, array( 'user_activation_key' => $key ), array( 'user_login' => $user->user_login ) );
 			// Send activation e-mail
 			$this->new_user_activation_notification( $user_id, $key );
-		} elseif ( 'admin' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) ) { // Admin approval
+		} elseif ( 'admin' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) ) { // Admin approval
 			// Send approval e-mail
 			$this->new_user_approval_admin_notification( $user_id );
 		}
@@ -74,20 +83,22 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	 * @access public
 	 */
 	function user_activation() {
+		global $theme_my_login;
+
 		// Attempt to activate the user
 		$errors = $this->activate_new_user( $_GET['key'], $_GET['login'] );
 		// Make sure there are no errors
 		if ( !is_wp_error( $errors ) ) {
 			$redirect_to = Theme_My_Login::get_current_url( 'activation=complete' );
-			if ( !empty( $GLOBALS['theme_my_login']->request_instance ) )
-				$redirect_to = add_query_arg( 'instance', $GLOBALS['theme_my_login']->request_instance, $redirect_to );
+			if ( !empty( $theme_my_login->request_instance ) )
+				$redirect_to = add_query_arg( 'instance', $theme_my_login->request_instance, $redirect_to );
 			wp_redirect( $redirect_to );
 			exit();
 		}
 		// If we make it here, the user failed activation, so it must be an invalid key
 		$redirect_to = Theme_My_Login::get_current_url( 'activation=invalidkey' );
-		if ( !empty( $GLOBALS['theme_my_login']->request_instance ) )
-			$redirect_to = add_query_arg( 'instance', $GLOBALS['theme_my_login']->request_instance, $redirect_to );
+		if ( !empty( $theme_my_login->request_instance ) )
+			$redirect_to = add_query_arg( 'instance', $theme_my_login->request_instance, $redirect_to );
 		wp_redirect( $redirect_to );
 		exit();
 	}
@@ -102,14 +113,14 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	 * @access public
 	 */
 	function send_activation() {
-		global $wpdb;
+		global $theme_my_login, $wpdb;
 
 		$login = isset( $_GET['login'] ) ? trim( $_GET['login'] ) : '';
 
 		if ( !$user_id = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM $wpdb->users WHERE user_login = %s", $login ) ) ) {
 			$redirect_to = Theme_My_Login::get_current_url( 'sendactivation=failed' );
-			if ( !empty( $GLOBALS['theme_my_login']->request_instance ) )
-				$redirect_to = add_query_arg( 'instance', $GLOBALS['theme_my_login']->request_instance, $redirect_to );
+			if ( !empty( $theme_my_login->request_instance ) )
+				$redirect_to = add_query_arg( 'instance', $theme_my_login->request_instance, $redirect_to );
 			wp_redirect( $redirect_to );
 			exit();
 		}
@@ -141,12 +152,16 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	 * @return WP_User|WP_Error WP_User if the user can login, WP_Error otherwise
 	 */
 	function authenticate( $user, $username, $password ) {
+		global $theme_my_login, $wpdb;
+
+		$cap_key = $wpdb->prefix . 'capabilities';
+
 		if ( $userdata = get_user_by( 'login', $username ) ) {
-			if ( array_key_exists( 'pending', (array) $userdata->wp_capabilities ) ) {
-				if ( 'email' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) ) {
+			if ( array_key_exists( 'pending', (array) $userdata->$cap_key ) ) {
+				if ( 'email' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) ) {
 					return new WP_Error( 'pending', sprintf(
 						__( '<strong>ERROR</strong>: You have not yet confirmed your e-mail address. <a href="%s">Resend activation</a>?', 'theme-my-login' ),
-						$GLOBALS['theme_my_login']->get_login_page_link( 'action=sendactivation&login=' . $username ) ) );
+						$theme_my_login->get_login_page_link( 'action=sendactivation&login=' . $username ) ) );
 				} else {
 					return new WP_Error( 'pending', __( '<strong>ERROR</strong>: Your registration has not yet been approved.', 'theme-my-login' ) );
 				}
@@ -188,15 +203,17 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	 * @return string URL to redirect to
 	 */
 	function register_redirect( $redirect_to ) {
+		global $theme_my_login;
+
 		// TML page link
-		$redirect_to = $GLOBALS['theme_my_login']->get_login_page_link();
+		$redirect_to = $theme_my_login->get_login_page_link();
 
-		if ( !empty( $GLOBALS['theme_my_login']->request_instance ) )
-			$redirect_to = $GLOBALS['theme_my_login']->get_current_url( 'instance=' . $GLOBALS['theme_my_login']->request_instance );
+		if ( !empty( $theme_my_login->request_instance ) )
+			$redirect_to = $theme_my_login->get_current_url( 'instance=' . $theme_my_login->request_instance );
 
-		if ( 'email' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) )
+		if ( 'email' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) )
 			$redirect_to = add_query_arg( 'pending', 'activation', $redirect_to );
-		elseif ( 'admin' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) )
+		elseif ( 'admin' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) )
 			$redirect_to = add_query_arg( 'pending', 'approval', $redirect_to );
 
 		return $redirect_to;
@@ -283,7 +300,7 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	 * @param string $key The unique activation key
 	 */
 	function new_user_activation_notification( $user_id, $key = '' ) {
-		global $wpdb;
+		global $wpdb, $current_site;
 
 		$user = new WP_User( $user_id );
 
@@ -298,8 +315,8 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 			}
 		}
 
-		if ( function_exists( 'is_multisite' ) && is_multisite() ) {
-			$blogname = $GLOBALS['current_site']->site_name;
+		if ( is_multisite() ) {
+			$blogname = $current_site->site_name;
 		} else {
 			// The blogname option is escaped with esc_html on the way into the database in sanitize_option
 			// we want to reverse this for the plain text arena of emails.
@@ -327,14 +344,15 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	 * @param int $user_id The user's ID
 	 */
 	function new_user_approval_admin_notification( $user_id ) {
+		global $current_site;
 
 		$user = new WP_User( $user_id );
 
 		$user_login = stripslashes( $user->user_login );
 		$user_email = stripslashes( $user->user_email );
 
-		if ( function_exists( 'is_multisite' ) && is_multisite() ) {
-			$blogname = $GLOBALS['current_site']->site_name;
+		if ( is_multisite() ) {
+			$blogname = $current_site->site_name;
 		} else {
 			// The blogname option is escaped with esc_html on the way into the database in sanitize_option
 			// we want to reverse this for the plain text arena of emails.
@@ -403,9 +421,9 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	/**
 	 * Initializes options for this module
 	 *
-	 * Callback for "tml_init_options" hook in method Theme_My_Login_Base::init_options()
+	 * Callback for "tml_init_options" hook in method Theme_My_Login::init_options()
 	 *
-	 * @see Theme_My_Login_Base::init_options()
+	 * @see Theme_My_Login::init_options()
 	 * @since 6.0
 	 * @access public
 	 *
@@ -466,8 +484,10 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	 * @access public
 	 */
 	function modules_loaded() {
+		global $theme_my_login;
+
 		// Moderation is enabled
-		if ( in_array( $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ), array( 'admin', 'email' ) ) ) {
+		if ( in_array( $theme_my_login->options->get_option( array( 'moderation', 'type' ) ), array( 'admin', 'email' ) ) ) {
 			// Remove all other registration filters
 			add_action( 'register_post', array( &$this, 'register_post' ) );
 
@@ -483,7 +503,7 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 			add_action( 'tml_new_user_activated', array( &$this, 'new_user_activated' ), 10, 2 );
 
 			// Add activation action
-			if ( 'email' == $GLOBALS['theme_my_login']->options->get_option( array( 'moderation', 'type' ) ) ) {
+			if ( 'email' == $theme_my_login->options->get_option( array( 'moderation', 'type' ) ) ) {
 				add_action( 'tml_request_activate', array( &$this, 'user_activation' ) );
 				add_action( 'tml_request_sendactivation', array( &$this, 'send_activation' ) );
 			}
@@ -497,7 +517,7 @@ class Theme_My_Login_User_Moderation extends Theme_My_Login_Module {
 	 * @access public
 	 */
 	function load() {
-		if ( function_exists( 'is_multisite' ) && is_multisite() )
+		if ( is_multisite() )
 			return;
 
 		add_action( 'tml_deactivate_user-moderation/user-moderation.php', array( &$this, 'deactivate' ) );

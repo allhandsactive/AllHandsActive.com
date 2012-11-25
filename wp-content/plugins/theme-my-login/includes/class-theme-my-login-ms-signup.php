@@ -40,13 +40,15 @@ class Theme_My_Login_MS_Signup {
 	 * @access public
 	 */
 	function __construct() {
+		global $theme_my_login;
+
 		add_action( 'tml_request_register', array( &$this, 'tml_request_register' ) );
 		add_action( 'tml_request_activate', array( &$this, 'tml_request_activate' ) );
 		add_action( 'tml_display_register', array( &$this, 'tml_display_register' ) );
 		add_action( 'tml_display_activate', array( &$this, 'tml_display_activate' ) );
 		add_filter( 'tml_title', array( &$this, 'tml_title' ), 10, 2 );
 
-		add_action( 'switch_blog', array( &$GLOBALS['theme_my_login'], 'init_options' ) );
+		add_action( 'switch_blog', array( &$theme_my_login, 'init_options' ) );
 		add_action( 'wpmu_new_blog', array( &$this, 'wpmu_new_blog' ), 10, 2 );
 
 		add_filter( 'site_url', array( &$this, 'site_url' ), 10, 3 );
@@ -64,12 +66,15 @@ class Theme_My_Login_MS_Signup {
 	 * @param object $theme_my_login Theme_My_Login object
 	 */
 	function tml_request_register( &$theme_my_login ) {
-		global $current_site;
+		global $current_site, $wp_version;
 
+		if ( version_compare( $wp_version, '3.3', '<' ) ) {
+			add_filter( 'pre_option_blog_public', '__return_zero' );
+			add_action( 'wp_head', 'noindex' );
+		} else {
+			add_action( 'wp_head', 'wp_no_robots' );
+		}
 		add_action( 'wp_head', array( &$this, 'signup_header' ) );
-
-		if ( version_compare( $GLOBALS['wp_version'], '3.1', '<' ) )
-			require_once( ABSPATH . WPINC . '/registration.php' );
 
 		if ( is_array( get_site_option( 'illegal_names' )) && isset( $_GET[ 'new' ] ) && in_array( $_GET[ 'new' ], get_site_option( 'illegal_names' ) ) == true ) {
 			wp_redirect( network_home_url() );
@@ -94,7 +99,7 @@ class Theme_My_Login_MS_Signup {
 	 * @param object $template Theme_My_Login_Template object
 	 */
 	function tml_display_register( &$template ) {
-		global $wpdb, $blogname, $blog_title, $domain, $path;
+		global $theme_my_login, $wpdb, $blogname, $blog_title, $domain, $path, $active_signup;
 
 		$this->theme_my_login_template =& $template;
 
@@ -132,7 +137,7 @@ class Theme_My_Login_MS_Signup {
 						$result = wpmu_validate_user_signup( $_POST['user_name'], $_POST['user_email'] );
 						extract( $result );
 
-						$GLOBALS['theme_my_login']->errors = $errors;
+						$theme_my_login->errors = $errors;
 
 						if ( $errors->get_error_code() ) {
 							$this->signup_user( $user_name, $user_email );
@@ -163,7 +168,7 @@ class Theme_My_Login_MS_Signup {
 						$result = wpmu_validate_user_signup( $_POST['user_name'], $_POST['user_email'] );
 						extract( $result );
 
-						$GLOBALS['theme_my_login']->errors = $errors;
+						$theme_my_login->errors = $errors;
 
 						if ( $errors->get_error_code() ) {
 							$this->signup_user( $user_name, $user_email );
@@ -173,7 +178,7 @@ class Theme_My_Login_MS_Signup {
 						$result = wpmu_validate_blog_signup( $_POST['blogname'], $_POST['blog_title'] );
 						extract( $result );
 
-						$GLOBALS['theme_my_login']->errors = $errors;
+						$theme_my_login->errors = $errors;
 
 						if ( $errors->get_error_code() ) {
 							$this->signup_blog( $user_name, $user_email, $blogname, $blog_title );
@@ -214,7 +219,7 @@ class Theme_My_Login_MS_Signup {
 					$result = wpmu_validate_blog_signup( $_POST['blogname'], $_POST['blog_title'], $current_user );
 					extract( $result );
 
-					$GLOBALS['theme_my_login']->errors = $errors;
+					$theme_my_login->errors = $errors;
 
 					if ( $errors->get_error_code() ) {
 						$this->signup_another_blog( $blogname, $blog_title );
@@ -272,7 +277,6 @@ class Theme_My_Login_MS_Signup {
 	 */
 	function signup_header() {
 		do_action( 'signup_header' );
-		echo '<meta name="robots" content="noindex,nofollow" />' . "\n";
 	}
 
 	/**
@@ -285,24 +289,21 @@ class Theme_My_Login_MS_Signup {
 	 * @param string $user_email The posted user e-mail
 	 */
 	function signup_user( $user_name = '', $user_email = '' ) {
-		global $current_site;
+		global $theme_my_login, $current_site, $active_signup;
 
 		$template =& $this->theme_my_login_template;
 
-		$active_signup = get_site_option( 'registration' );
-		if ( !$active_signup )
-			$active_signup = 'all';
-
-		$active_signup = apply_filters( 'wpmu_active_signup', $active_signup ); // return "all", "none", "blog" or "user"
-
 		// allow definition of default variables
-		$filtered_results = apply_filters( 'signup_user_init', array( 'user_name' => $user_name, 'user_email' => $user_email, 'errors' => $GLOBALS['theme_my_login']->errors ) );
+		$filtered_results = apply_filters( 'signup_user_init', array( 'user_name' => $user_name, 'user_email' => $user_email, 'errors' => $theme_my_login->errors ) );
+		$user_name = $filtered_results['user_name'];
+		$user_email = $filtered_results['user_email'];
+		$errors = $filtered_results['errors'];
 
 		if ( !empty( $this->theme_my_login_template->options['ms_signup_user_template'] ) )
 			$templates[] = $this->theme_my_login_template->options['ms_signup_user_template'];
 		$templates[] = 'ms-signup-user-form.php';
 
-		$template->get_template( $templates, '', true, array_merge( $filtered_results, compact( 'active_signup', 'current_site' ) ) );
+		$template->get_template( $templates, '', true, compact( 'current_site', 'active_signup', 'user_name', 'user_email', 'errors' ) );
 	}
 
 	/**
@@ -317,21 +318,26 @@ class Theme_My_Login_MS_Signup {
 	 * @param string $blog_title The posted blog title
 	 */
 	function signup_blog( $user_name = '', $user_email = '', $blogname = '', $blog_title = '' ) {
-		global $current_site;
+		global $theme_my_login, $current_site;
 
 		$template =& $this->theme_my_login_template;
 
 		// allow definition of default variables
-		$filtered_results = apply_filters( 'signup_blog_init', array( 'user_name' => $user_name, 'user_email' => $user_email, 'blogname' => $blogname, 'blog_title' => $blog_title, 'errors' => $GLOBALS['theme_my_login']->errors ) );
+		$filtered_results = apply_filters( 'signup_blog_init', array( 'user_name' => $user_name, 'user_email' => $user_email, 'blogname' => $blogname, 'blog_title' => $blog_title, 'errors' => $theme_my_login->errors ) );
+		$user_name = $filtered_results['user_name'];
+		$user_email = $filtered_results['user_email'];
+		$blogname = $filtered_results['blogname'];
+		$blog_title = $filtered_results['blog_title'];
+		$errors = $filtered_results['errors'];
 
-		if ( empty( $filtered_results['blogname'] ) )
-			$filtered_results['blogname'] = $filtered_results['user_name'];
+		if ( empty( $blogname ) )
+			$blogname = $user_name;
 
 		if ( !empty( $this->theme_my_login_template->options['ms_signup_blog_template'] ) )
 			$templates[] = $this->theme_my_login_template->options['ms_signup_blog_template'];
 		$templates[] = 'ms-signup-blog-form.php';
 
-		$template->get_template( $templates, '', true, array_merge( $filtered_results, compact( 'current_site' ) ) );
+		$template->get_template( $templates, '', true, compact( 'current_site', 'user_name', 'user_email', 'blogname', 'blog_title', 'errors' ) );
 	}
 
 	/**
@@ -344,18 +350,21 @@ class Theme_My_Login_MS_Signup {
 	 * @param string $blog_title The posted blog title
 	 */
 	function signup_another_blog( $blogname = '', $blog_title = '' ) {
-		global $current_site;
+		global $theme_my_login, $current_site;
 
 		$template =& $this->theme_my_login_template;
 
 		// allow definition of default variables
-		$filtered_results = apply_filters( 'signup_another_blog_init', array( 'blogname' => $blogname, 'blog_title' => $blog_title, 'errors' => $GLOBALS['theme_my_login']->errors ) );
+		$filtered_results = apply_filters( 'signup_another_blog_init', array( 'blogname' => $blogname, 'blog_title' => $blog_title, 'errors' => $theme_my_login->errors ) );
+		$blogname = $filtered_results['blogname'];
+		$blog_title = $filtered_results['blog_title'];
+		$errors = $filtered_results['errors'];
 
 		if ( !empty( $this->theme_my_login_template->options['ms_signup_another_blog_template'] ) )
 			$templates[] = $this->theme_my_login_template->options['ms_signup_another_blog_template'];
 		$templates[] = 'ms-signup-another-blog-form.php';
 
-		$template->get_template( $templates, '', true, array_merge( $filtered_results, compact( 'current_site' ) ) );
+		$template->get_template( $templates, '', true, compact( 'current_site', 'blogname', 'blog_title', 'errors' ) );
 	}
 
 	/**
@@ -367,12 +376,12 @@ class Theme_My_Login_MS_Signup {
 	 * @param object $theme_my_login Theme_My_Login object
 	 */
 	function tml_request_activate( &$theme_my_login ) {
-		global $current_site;
+		global $current_site, $wp_object_cache;
+
+		if ( is_object( $wp_object_cache ) )
+			$wp_object_cache->cache_enabled = false;
 
 		add_action( 'wp_head', array( &$this, 'activate_header' ) );
-
-		if ( version_compare( $GLOBALS['wp_version'], '3.1', '<' ) )
-			require_once( ABSPATH . WPINC . '/registration.php' );
 	}
 
 	/**
@@ -436,7 +445,7 @@ class Theme_My_Login_MS_Signup {
 					<p><span class="h3"><?php _e( 'Password:', 'theme-my-login' ); ?></span> <?php echo $password; ?></p>
 				</div>
 
-				<?php if ( $url != network_home_url( '', 'http' ) ) : switch_to_blog( (int) $blog_id );?>
+				<?php if ( $url != network_home_url( '', 'http' ) ) : switch_to_blog( (int) $blog_id ); ?>
 					<p class="view"><?php printf( __( 'Your account is now activated. <a href="%1$s">View your site</a> or <a href="%2$s">Login</a>', 'theme-my-login' ), $url, wp_login_url() ); ?></p>
 				<?php restore_current_blog(); else: ?>
 					<p class="view"><?php printf( __( 'Your account is now activated. <a href="%1$s">Login</a> or go back to the <a href="%2$s">homepage</a>.', 'theme-my-login' ), network_site_url( 'wp-login.php', 'login' ), network_home_url() ); ?></p>
@@ -507,7 +516,7 @@ class Theme_My_Login_MS_Signup {
 	 * @return string The modified URL
 	 */
 	function site_url( $url, $path, $orig_scheme ) {
-		global $pagenow;
+		global $theme_my_login, $pagenow;
 
 		$actions = array( 'wp-signup.php' => 'register', 'wp-activate.php' => 'activate', 'wp-login.php' => '' );
 
@@ -533,7 +542,7 @@ class Theme_My_Login_MS_Signup {
 					$query = array_merge( $query, (array) $r );
 
 				// Get the login page link along with the query
-				$url = $GLOBALS['theme_my_login']->get_login_page_link( $query );
+				$url = $theme_my_login->get_login_page_link( $query );
 
 				// Check if HTTPS is needed
 				if ( 'https' == strtolower( $orig_scheme ) )

@@ -4,7 +4,16 @@ jQuery(document).ready(function($) {
 		var old_value = $('#value-'+user_id+'-'+field_name).html();
 		var all_inside_ef_td = $('#ef-new-value-'+field_name).clone();
 		var extra_field = all_inside_ef_td.find(':first-child');
-		var extra_field_type = extra_field.attr('type');
+		var tag_name = extra_field.get(0).tagName.toLowerCase();
+		var extra_field_type;
+		if (tag_name == 'select') {
+			if (extra_field.attr('multiple') != undefined)
+				extra_field_type = 'select-multiple';
+			else
+				extra_field_type = tag_name;
+		}
+		else
+			extra_field_type = extra_field.attr('type');
 
 		extra_field.attr('id', 'ef-new-value-'+user_id+'-'+field_name);
 		extra_field.attr('name', '');
@@ -52,7 +61,7 @@ jQuery(document).ready(function($) {
 				if (new_value == null)
 					new_value = Array();
 
-				if($.inArray(postL10n.dropdown_first_item, new_value) > -1)
+				if ($.inArray(postL10n.dropdown_first_item, new_value) > -1)
 					new_value.splice(0, 1);
 
 				new_value = new_value.join(',');

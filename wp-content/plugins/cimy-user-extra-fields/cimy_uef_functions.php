@@ -394,8 +394,10 @@ function cimy_uef_sanitize_content($content, $override_allowed_tags=null) {
 
 	if (is_array($override_allowed_tags))
 		$cimy_allowedtags = $override_allowed_tags;
-	else
+	else {
 		$cimy_allowedtags = $allowedtags;
+		$cimy_allowedtags['a']['target'] = array();
+	}
 
 	$content = wp_kses($content, $cimy_allowedtags);
 	$content = wptexturize($content);
@@ -607,4 +609,306 @@ function cimy_uef_get_dir_or_filename($user_login, $url="", $is_thumbnail=false)
 		return $blog_path.$user_login."/".basename($url);
 }
 
-?>
+function cimy_uef_set_javascript_dependencies($javascripts_dep, $type, $rule_name, $rule) {
+	switch ($type) {
+		case "avatar":
+		case "picture":
+			if ($rule)
+				$javascripts_dep['image_fields'][$rule_name] += 1;
+			// no break we want to count as a file too!
+		case "file":
+			if ($rule)
+				$javascripts_dep['file_fields'][$rule_name] += 1;
+			break;
+		case "textarea-rich":
+			if ($rule)
+				$javascripts_dep['tinymce_fields'][$rule_name] += 1;
+			break;
+		default:
+			break;
+	}
+	return $javascripts_dep;
+}
+
+function cimy_uef_avatar_filter($avatar, $id_or_email, $size, $default, $alt="") {
+	global $wpdb, $wpdb_data_table, $wpdb_fields_table, $cuef_upload_path;
+
+	$sql = "SELECT ID,VALUE FROM $wpdb_fields_table WHERE TYPE='avatar' LIMIT 1";
+	$res = $wpdb->get_results($sql);
+
+	if (empty($res))
+		return $avatar;
+
+	$field_id = $res[0]->ID;
+	$overwrite_default = $res[0]->VALUE;
+
+	// if there is no avatar field all the rest is totally cpu time wasted, returning...
+	if (!isset($field_id))
+		return $avatar;
+
+	if (!empty($overwrite_default))
+		$overwrite_default = "<img alt='{$safe_alt}' src='{$overwrite_default}' class='avatar avatar-{$size} photo avatar-default' height='{$size}' width='{$size}' />";
+
+	$email = '';
+	$user_login = '';
+
+	// $id_or_email could be id, email or an object... fancy way to implement things!
+	// we may have the id
+	if ( is_numeric($id_or_email) ) {
+		$id = (int) $id_or_email;
+		$user = get_userdata($id);
+		if ( $user ) {
+			$email = $user->user_email;
+			$user_login = $user->user_login;
+		}
+	} elseif ( is_object($id_or_email) ) {
+		// we may have the object...
+		if ( isset($id_or_email->comment_type) && '' != $id_or_email->comment_type && 'comment' != $id_or_email->comment_type )
+			return false; // No avatar for pingbacks or trackbacks, maybe useless as same check is performed before this code is fired...
+
+		if ( !empty($id_or_email->user_id) ) {
+			$id = (int) $id_or_email->user_id;
+			$user = get_userdata($id);
+			if ( $user) {
+				$email = $user->user_email;
+				$user_login = $user->user_login;
+			}
+		} else {
+			// no user_id no custom avatar, nothing else to do
+			return $avatar;
+		}
+	} else {
+		// ...or we may have the email
+		$email = $id_or_email;
+
+		$sql = sprintf("SELECT ID, user_login FROM %s WHERE user_email='%s' LIMIT 1", $wpdb->users, $wpdb->escape($email));
+		$res = $wpdb->get_results($sql);
+
+		// something went wrong, aborting and returning normal avatar
+		if (!isset($res))
+			return $avatar;
+
+		$id = $res[0]->ID;
+		$user_login = $res[0]->user_login;
+	}
+
+	if (isset($id)) {
+		$sql = "SELECT data.VALUE FROM $wpdb_data_table as data JOIN $wpdb_fields_table as efields ON efields.id=data.field_id WHERE (efields.TYPE='avatar' AND data.USER_ID=$id) LIMIT 1";
+
+		$value = $wpdb->get_var($sql);
+
+		if ( false === $alt)
+			$safe_alt = '';
+		else
+			$safe_alt = esc_attr($alt);
+
+		// max $size allowed is 512
+		if (isset($value)) {
+			if ($value == "") {
+				// apply default only here or below, as we are sure to have an user that did not set anything
+				if ($overwrite_default != "")
+					return $overwrite_default;
+				else
+					return $avatar;
+			}
+
+			$thumb_value = cimy_get_thumb_path($value);
+			$file_thumb = $cuef_upload_path.$user_login."/avatar/".cimy_get_thumb_path(basename($value));
+
+			if (is_file($file_thumb))
+				$value = $thumb_value;
+
+			$avatar = "<img alt='{$safe_alt}' src='{$value}' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' />";
+		}
+		// apply default only here, as we are sure to have an user that did not set anything
+		else if ($overwrite_default != "")
+			return $overwrite_default;
+	}
+
+	return $avatar;
+}
+
+function cimy_manage_upload($input_name, $user_login, $rules, $old_file=false, $delete_file=false, $type="", $new_filename="") {
+	global $cuef_upload_path, $cuef_upload_webpath, $cuef_plugin_dir, $cimy_uef_plugins_dir;
+
+	$type_path = "";
+	if (($type == "file") || ($type == "avatar"))
+		$type_path.= $type."/";
+
+	$blog_path = $cuef_upload_path;
+
+	if (($cimy_uef_plugins_dir == "plugins") && (is_multisite())) {
+		global $blog_id;
+
+		$blog_path .= $blog_id."/";
+
+		// create blog subdir
+		if (!is_dir($blog_path)) {
+			if (defined("FS_CHMOD_DIR")) {
+				mkdir($blog_path, FS_CHMOD_DIR);
+				chmod($blog_path, FS_CHMOD_DIR);
+			}
+			else {
+				mkdir($blog_path, 0777);
+				chmod($blog_path, 0777);
+			}
+		}
+	}
+
+	if (!empty($user_login)) {
+		$user_path = $blog_path.$user_login."/";
+		$file_path = $blog_path.$user_login."/".$type_path;
+	}
+	else {
+		$user_path = $blog_path;
+		$file_path = $blog_path.$type_path;
+	}
+
+	// delete old file if requested
+	if ($delete_file) {
+		if (is_file($file_path.$old_file))
+			unlink($file_path.$old_file);
+	
+		$old_thumb_file = cimy_get_thumb_path($old_file);
+		
+		if (is_file($file_path.$old_thumb_file))
+			unlink($file_path.$old_thumb_file);
+	}
+
+	// if $user_login is not present
+	//	or there is no file to upload
+	//	or dest dir is not writable
+	// then everything else is useless
+	if ((($user_login == "") && ($type != "registration-logo")) || (empty($_FILES[$input_name]['name'])) || (!is_writable($cuef_upload_path)))
+		return "";
+
+	// create user subdir
+	if (!is_dir($user_path)) {
+		if (defined("FS_CHMOD_DIR")) {
+			mkdir($user_path, FS_CHMOD_DIR);
+			chmod($user_path, FS_CHMOD_DIR);
+		}
+		else {
+			mkdir($user_path, 0777);
+			chmod($user_path, 0777);
+		}
+	}
+
+	// create avatar subdir if needed
+	if (($type != "registration-logo") && ($type != "picture") && (!is_dir($file_path))) {
+		if (defined("FS_CHMOD_DIR")) {
+			mkdir($file_path, FS_CHMOD_DIR);
+			chmod($file_path, FS_CHMOD_DIR);
+		}
+		else {
+			mkdir($file_path, 0777);
+			chmod($file_path, 0777);
+		}
+	}
+
+	if (!empty($new_filename))
+		$file_name = $new_filename;
+	else
+		$file_name = $_FILES[$input_name]['name'];
+
+	// filesize in Byte transformed in KiloByte
+	$file_size = $_FILES[$input_name]['size'] / 1024;
+	$file_type = $_FILES[$input_name]['type'];
+	$file_tmp_name = $_FILES[$input_name]['tmp_name'];
+	$file_error = $_FILES[$input_name]['error'];
+
+	$allowed_mime_types = get_allowed_mime_types();
+	// let's see if the image extension is correct, bad boy
+	$validate = wp_check_filetype_and_ext($file_tmp_name, $file_name, $allowed_mime_types);
+	if ($validate['proper_filename'] !== false)
+		$file_name = $validate['proper_filename'];
+
+	// sanitize the file name
+	$file_name = wp_unique_filename($file_path, $file_name);
+	// file path
+	$file_full_path = $file_path.$file_name;
+
+	// picture url to write in the DB
+	$data = $cuef_upload_webpath;
+
+	if (($cimy_uef_plugins_dir == "plugins") && (is_multisite()))
+		$data.= $blog_id."/";
+
+	if (empty($user_login))
+		$data .= $type_path.$file_name;
+	else
+		$data .= $user_login."/".$type_path.$file_name;
+
+	// CHECK IF IT IS A REAL PICTURE
+	if (($type != "file") && (stristr($file_type, "image/") === false))
+		$file_error = 1;
+	
+	// MIN LENGTH
+	if (isset($rules['min_length']))
+		if ($file_size < (intval($rules['min_length'])))
+			$file_error = 1;
+	
+	// EXACT LENGTH
+	if (isset($rules['exact_length']))
+		if ($file_size != (intval($rules['exact_length'])))
+			$file_error = 1;
+
+	// MAX LENGTH
+	if (isset($rules['max_length']))
+		if ($file_size > (intval($rules['max_length'])))
+			$file_error = 1;
+
+	// if there are no errors and filename is NOT empty
+	if (($file_error == 0) && (!empty($file_name))) {
+		if (move_uploaded_file($file_tmp_name, $file_full_path)) {
+			// change file permissions for broken servers
+			if (defined("FS_CHMOD_FILE"))
+				@chmod($file_full_path, FS_CHMOD_FILE);
+			else
+				@chmod($file_full_path, 0644);
+			
+			// if there is an old file to delete
+			if ($old_file) {
+				// delete old file if the name is different, if equal NOPE because new file is already uploaded
+				if ($file_name != $old_file)
+					if (is_file($file_path.$old_file))
+						unlink($file_path.$old_file);
+				
+				$old_thumb_file = cimy_get_thumb_path($old_file);
+				
+				if (is_file($file_path.$old_thumb_file))
+					unlink($file_path.$old_thumb_file);
+			}
+			
+			// should be stay AFTER DELETIONS
+			if ((isset($rules['equal_to'])) && ($type != "file")) {
+				if ($maxside = intval($rules['equal_to'])) {
+					if (!function_exists("image_resize"))
+						require_once(ABSPATH . 'wp-includes/media.php');
+
+					if (!function_exists("wp_load_image"))
+						require_once($cuef_plugin_dir.'/cimy_uef_missing_functions.php');
+
+					image_resize($file_full_path, $maxside, $maxside, false, "thumbnail");
+				}
+			}
+		}
+		else
+			$data = "";
+	}
+	else
+		$data = "";
+
+	return $data;
+}
+
+function cimy_uef_get_allowed_image_extensions() {
+	$all_ext = get_allowed_mime_types();
+	$image_ext = array();
+	if (empty($all_ext))
+		return $image_ext;
+	foreach ($all_ext as $key=>$value)
+		if (stristr($value, "image/") !== false)
+			$image_ext = array_merge($image_ext, explode('|', $key));
+	return $image_ext;
+}

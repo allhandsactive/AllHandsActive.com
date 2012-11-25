@@ -258,25 +258,46 @@ function cimy_show_options_notembedded() {
 }
 
 function cimy_show_options($results, $embedded) {
-	global $wpdb, $wpdb_wp_fields_table, $wpdb_fields_table, $wpdb_data_table, $max_length_fieldset_value, $cimy_uef_name, $cimy_uef_url, $cimy_project_url, $cimy_uef_version, $cimy_uef_domain, $cimy_top_menu, $max_length_extra_fields_title, $cuef_upload_path, $cuef_plugin_dir;
+	global $wpdb, $wpdb_wp_fields_table, $wpdb_fields_table, $wpdb_data_table, $max_length_fieldset_value, $cimy_uef_name, $cimy_uef_url, $cimy_project_url, $cimy_uef_version, $cimy_uef_domain, $cimy_top_menu, $max_length_extra_fields_title, $cuef_upload_path, $cuef_plugin_dir, $cimy_uef_plugins_dir;
 
 	if (!cimy_check_admin('manage_options'))
 		return;
-		
+
 	// save options engine
 	if ((isset($_POST['cimy_options'])) && (isset($cimy_top_menu)))
 		$results = cimy_save_options();
-	
+
 	$options = cimy_get_options();
-	wp_print_scripts("cimy_uef_upload_file");
-	$warning_msg = $wpdb->escape(__("Please upload an image with one of the following extensions", $cimy_uef_domain));
+	if (!empty($options['version']) && $cimy_uef_version != $options['version'])
+		$options = cimy_plugin_install();
+
+	$warning_msg = esc_js(__("Please upload an image with one of the following extensions", $cimy_uef_domain));
 
 	if ($options) {
-		if ((!is_dir($cuef_upload_path)) && (is_writable(WP_CONTENT_DIR))) {
-			if (defined("FS_CHMOD_DIR"))
-				@mkdir($cuef_upload_path, FS_CHMOD_DIR);
-			else
-				@mkdir($cuef_upload_path, 0777);
+		if (is_writable(WP_CONTENT_DIR)) {
+			if (!is_dir($cuef_upload_path)) {
+				if (defined("FS_CHMOD_DIR"))
+					@mkdir($cuef_upload_path, FS_CHMOD_DIR);
+				else
+					@mkdir($cuef_upload_path, 0777);
+			}
+
+			if (is_multisite()) {
+				if ($cimy_uef_plugins_dir == "plugins") {
+					if (!is_dir(WP_CONTENT_DIR.'/mu-plugins')) {
+						if (defined("FS_CHMOD_DIR"))
+							@mkdir(WP_CONTENT_DIR.'/mu-plugins', FS_CHMOD_DIR);
+						else
+							@mkdir(WP_CONTENT_DIR.'/mu-plugins', 0777);
+					}
+					if (!is_file(WP_CONTENT_DIR.'/mu-plugins/cimy_uef_mu_activation.php'))
+						copy($cuef_plugin_dir.'/cimy_uef_mu_activation.php', WP_CONTENT_DIR.'/mu-plugins/cimy_uef_mu_activation.php');
+				}
+				else if ($cimy_uef_plugins_dir == "mu-plugins") {
+					if (is_file(WP_CONTENT_DIR.'/mu-plugins/cimy_uef_mu_activation.php'))
+						unlink(WP_CONTENT_DIR.'/mu-plugins/cimy_uef_mu_activation.php');
+				}
+			}
 		}
 
 		$options['fieldset_title'] = esc_attr($options['fieldset_title']);
@@ -323,7 +344,7 @@ function cimy_show_options($results, $embedded) {
 	if ((isset($cimy_top_menu)) && ($embedded))
 		return $ret;
 
-	$update_db_label = $wpdb->escape(__("This operation will create/update all missing tables/options, do you want to proceed?", $cimy_uef_domain));
+	$update_db_label = esc_js(__("This operation will create/update all missing tables/options, do you want to proceed?", $cimy_uef_domain));
 	
 	?>
 	
@@ -704,5 +725,3 @@ function cimy_show_options($results, $embedded) {
 	
 	return $ret;
 }
-
-?>
