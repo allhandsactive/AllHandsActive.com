@@ -1,0 +1,88 @@
+.jzzf_form div, .jzzf_form p, .jzzf_form ul, .jzzf_form li, .jzzf_form span {
+	border: 0;
+	font-family: inherit;
+	font-size: 100%;
+	font-style: inherit;
+	font-weight: inherit;
+	margin: 0;
+	outline: 0;
+	padding: 0;
+	vertical-align: baseline;
+}
+
+.jzzf_form_elements {
+    width: 530px;
+}
+
+.jzzf_form input, .jzzf_form select {
+    padding: 0;
+    margin: 0;
+}
+
+.jzzf_form :focus {/* remember to define focus styles! */
+	outline: 0;
+}
+.jzzf_form ul {
+	list-style: none;
+}
+
+.jzzf_form ul li.jzzf_radio_option {
+	display: list-item;
+}
+
+.jzzf_form .jzzf_element_label, .jzzf_form .jzzf_element_heading {
+    display: block;
+    font-weight: bold;
+}
+
+.jzzf_form .jzzf_element {
+    padding-bottom: 1em;
+}
+
+.jzzf_form .jzzf_element_c.jzzf_ahead_c {
+    padding-bottom: inherit;
+}
+
+.jzzf_form .jzzf_element_h {
+    font-weight: bold;
+}
+
+.jzzf_form .jzzf_element_h.jzzf_ahead_c, .jzzf_form .jzzf_element_h.jzzf_ahead_m, .jzzf_form .jzzf_element_h.jzzf_ahead_t {
+    padding-bottom: inherit;
+}
+
+.jzzf_form .jzzf_radio_option_label, .jzzf_form .jzzf_checkbox_label {
+    padding-left: 8px;
+}
+
+.jzzf_form .jzzf_element {
+    padding-right: 8px;
+    display: block;
+}
+
+div.jzzf_full { width: 392px; }
+div.jzzf_half { width: 192px; }
+div.jzzf_third { width: 125px; }
+div.jzzf_quarter { width: 92px; }
+
+.jzzf_row {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.jzzf_form input[type=text], .jzzf_form select { width: 100%; }
+
+.jzzf_break {
+    float: left;
+    clear: left;
+}
+
+.jzzf_no_break {
+    float: left;
+}
+
+.jzzf_message {
+    width: 125px;
+    float: left;
+}

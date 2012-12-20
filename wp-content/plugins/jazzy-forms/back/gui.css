@@ -1,0 +1,330 @@
+
+#jzzf_selection select {
+    width: 500px;
+}
+
+#jzzf_selection label {
+    margin-right: 12px;    
+}
+
+#jzzf_selection a {
+    padding-left: 5px;
+}
+
+.jzzf_column_heading {
+    margin-bottom: 10px;
+}
+
+#jzzf_tabs {
+    margin: 10px 0 0 20px;
+    list-style-type: none;
+    display: block;
+    height: 30px;
+}
+
+#jzzf_tabs li {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 4px 0 0px;
+    border: 1px solid #ddd;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    height: 13px;
+    z-index: 10;
+    background-color: #eee;
+    cursor: pointer;
+}
+
+#jzzf_tabs li.jzzf_current_tab {
+    background-color: #fff;
+    border-bottom: 1px solid #fff;
+}
+
+#jzzf_main {
+    overflow: hidden;
+    width: 1000px;
+    background-color: #fff;
+    margin: 0 10px 10px 0px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.jzzf_section {
+    width: 1000px;
+}
+
+.jzzf_elements_toolbox {
+    display: block;
+    overflow: visible;
+    width: 350px;
+    float: left;
+    clear: both;
+}
+
+.jzzf_elements_toolbox_items {
+    display: block;
+    padding: 10px 10px 4px 10px;
+    overflow: hidden;
+    background: #eee;
+    border-radius: 3px;
+    width: 148px;
+    float: left;
+}
+
+#jzzf_toolbox_input {
+    margin-right: 10px;
+}
+
+#jzzf_toolbox_buttons {
+    margin-bottom: 10px;
+}
+
+.jzzf_elements_toolbox_items li {
+    background: #ddd;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 8px;
+    height: 14px;
+    width: 130px;
+    cursor: move;
+}
+
+.jzzf_elements_toolbox_items li:hover {
+    background-color: #e8e8e8;
+}
+
+#jzzf_elements_push_for_action {
+    text-align: center;
+    margin-top: 80px;
+    float: left;
+    width: 150px;
+}
+
+#jzzf_elements {
+    overflow: hidden;
+    margin-left: 400px;
+    width: 500px;
+}
+
+#jzzf_elements_list {
+    min-height: 200px;
+    padding: 10px;
+    overflow: hidden;
+    background: #eee;
+    border-radius: 3px;
+}
+
+.jzzf_element {
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.jzzf_element_header {
+    background: #ddd;
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+    height: 14px;
+    cursor: move;
+}
+
+.jzzf_element.jzzf_collapsed .jzzf_element_header {
+    border-bottom: none;
+}
+
+.jzzf_element label {
+    vertical-align: top;
+}
+
+.jzzf_element_body ul li {
+    overflow: hidden;
+    height: 1%;
+}
+
+.jzzf_element_header:hover {
+    background-color: #e8e8e8;
+}
+
+.jzzf_element_header .jzzf_element_delete {
+    width: 16px;
+    height: 16px;
+    background: url('img/del.png') no-repeat center;
+    float: right;
+}
+
+.jzzf_element_header .jzzf_element_delete:hover {
+    background: url('img/del_hi.png') no-repeat center;
+}
+
+.jzzf_element_body {
+    background: #fff;
+    padding: 0;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+.jzzf_element_body li {
+    margin-bottom: 2px;
+    height: 30px;
+}
+
+.jzzf_element_body label, .jzzf_section > ul > li > label, .jzzf_section > div > ul > li > label {
+    display: inline-block;
+    width: 140px;
+    margin-right: 12px;
+}
+
+.jzzf_section .jzzf_checkbox_label {
+    width: 400px;
+}
+
+.jzzf_section > ul > li > input[type=checkbox]  {
+    margin-right: 12px;
+}
+
+.jzzf_element_body fieldset ul li input[type=text],
+.jzzf_section > ul > li > input[type=text],
+.jzzf_section > div > ul > li > input[type=text],
+.jzzf_section > ul > li > textarea {
+    width: 280px;
+    display: inline-block;
+    float: none;
+}
+
+#jzzf_css, #jzzf_email_message {
+    width: 435px;
+    height: 200px;
+}
+
+.jzzf_element_body legend {
+    padding: 8px 0;
+}
+
+.jzzf_element.jzzf_collapsed .jzzf_element_body {
+    display: none;
+}
+
+.jzzf_option_table thead tr th {
+    text-align: left;
+    font-weight: normal;
+}
+
+.jzzf_column_title, .jzzf_column_value {
+    width: 174px;
+}
+
+#jzzf_form_form input {
+    margin-right: 12px;
+}
+
+.jzzf_type {
+    width: 16px;
+    height: 16px;
+    float: left;
+    padding-right: 10px;
+    background: url('img/u.png') no-repeat center;
+}
+
+.jzzf_type_n { background-image: url('img/n.png'); }
+.jzzf_type_a { background-image: url('img/a.png'); }
+.jzzf_type_c { background-image: url('img/c.png'); }
+.jzzf_type_r { background-image: url('img/r.png'); }
+.jzzf_type_d { background-image: url('img/d.png'); }
+.jzzf_type_u { background-image: url('img/u.png'); }
+.jzzf_type_f { background-image: url('img/f.png'); }
+.jzzf_type_t { background-image: url('img/t.png'); }
+.jzzf_type_h { background-image: url('img/h.png'); }
+.jzzf_type_m { background-image: url('img/m.png'); }
+.jzzf_type_e { background-image: url('img/e.png'); }
+.jzzf_type_x { background-image: url('img/x.png'); }
+
+.jzzf_arrow {
+    width: 32px;
+    height: 16px;
+    background: url('img/arrow.png') no-repeat center;
+    margin: 4px auto;
+}
+
+.jzzf_div_collapsable {
+    border-top: 1px solid #ccc;
+}
+
+.jzzf_div_collapsable > h3 {
+    margin: 0;
+    font-weight: normal;
+    font-size: 12px;
+}
+
+.jzzf_toggler {
+    cursor: default;
+}
+
+.jzzf_toggler div {
+    float: left;
+    width: 16px;
+    height: 16px;
+    background-image: url('img/expanded.png');
+}
+
+.jzzf_div_collapsable {
+    padding: 4px 12px 8px 12px;
+}
+
+.jzzf_div_collapsable.jzzf_div_collapsed {
+    padding-bottom: 4px;
+}
+
+.jzzf_div_fixed {
+    padding: 8px 12px;
+}
+
+.jzzf_div_collapsed .jzzf_toggler div {
+    background-image: url('img/collapsed.png');
+}
+
+.jzzf_div_collapsed .jzzf_collapsable_body {
+    display: none;
+}
+
+.jzzf_div_collapsed > h3 {
+    display: block;
+}
+
+.jzzf_collapsable_body {
+    margin: 10px 0 0 16px;
+}
+
+.jzzf_collapsable_body label {
+    width: 124px;
+}
+
+.jzzf_element select {
+    width: 160px;
+}
+
+#jzzf_section_email.jzzf_enabled .jzzf_email_settings {
+    display: block;
+}
+
+#jzzf_section_email.jzzf_disabled .jzzf_email_settings {
+    display: none;
+}
+
+#jzzf_section_email.jzzf_enabled .jzzf_email_disclaimer {
+    display: none;
+}
+
+#jzzf_section_email.jzzf_disabled .jzzf_email_disclaimer {
+    display: block;
+}
+
+.jzzf_help {
+    float: right;
+    width: 500px;
+}
+
+.jzzf_doculink {
+    margin-top: 10px;
+    text-align: center;
+}
