@@ -1,5 +1,5 @@
 <?php 
-$modelId = $_GET['m'];
+$modelId = $_GET['mc'];
 get_header();
 ?>
 
