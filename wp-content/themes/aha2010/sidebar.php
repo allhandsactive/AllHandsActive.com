@@ -46,11 +46,18 @@
 <?php
 	// A second sidebar for widgets, just because.
 	if ( is_active_sidebar( 'secondary-widget-area' ) ) : ?>
-
 		<div id="secondary" class="widget-area" role="complementary">
 			<ul class="xoxo">
 				<?php dynamic_sidebar( 'secondary-widget-area' ); ?>
 			</ul>
+
+			<div id="site-sponsor-oreilly">
+			  <a href="http://www.oreilly.com"><img 
+src="http://cdn.oreillystatic.com/community/promote/ug_program_member.gif" 
+/></a>
+
+			</div>
+
 		</div><!-- #secondary .widget-area -->
 
 <?php endif; ?>
