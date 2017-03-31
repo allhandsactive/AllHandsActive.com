@@ -64,12 +64,6 @@ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   ga('send', 'pageview');
 
 </script>
-<script type="text/javascript" src="//s3.amazonaws.com/downloads.mailchimp.com/js/signup-forms/popup/embed.js" data-dojo-config="usePlainJson: true, isDebug: false"></script>
-<script type="text/javascript">require(["mojo/signup-forms/Loader"], function(L) 
-{ 
-L.start({"baseUrl":"mc.us4.list-manage.com","uuid":"0497c04d5751340fb683e3d14","lid":"5612521156"}) 
-})
-</script>
 </head>
 
 <body <?php body_class(); ?>>
